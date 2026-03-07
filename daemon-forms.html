@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daemon Forms -- Visual Prototypes</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #07070f;
+      color: #ccc;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+    h1 {
+      text-align: center;
+      padding: 30px 20px 5px;
+      font-weight: 300;
+      font-size: 28px;
+      color: #aab;
+      letter-spacing: 0.3em;
+    }
+    h1 span { color: #7799cc; }
+    .subtitle {
+      text-align: center;
+      color: #556;
+      font-size: 13px;
+      margin-bottom: 30px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      padding: 0 30px 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #0c0c18;
+      border: 1px solid #1a1a2e;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .card:hover { border-color: #334; }
+    .card canvas {
+      width: 100%;
+      height: 300px;
+      display: block;
+    }
+    .card-info {
+      padding: 16px 20px;
+    }
+    .card-info h2 {
+      font-size: 16px;
+      font-weight: 500;
+      color: #aab;
+      margin-bottom: 4px;
+      letter-spacing: 0.1em;
+    }
+    .card-info .archetype {
+      font-size: 11px;
+      color: #556;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 8px;
+    }
+    .card-info p {
+      font-size: 13px;
+      color: #778;
+      line-height: 1.5;
+    }
+    .card-info .personality {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #667;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h1>d a e m o n <span>forms</span></h1>
+  <p class="subtitle">prototypical companion visualizations -- each one a different way of being seen</p>
+  <div class="grid" id="grid"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./node_modules/three/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+
+    // ============================================================
+    //  DAEMON FORM DEFINITIONS
+    // ============================================================
+
+    const FORMS = [
+      {
+        name: 'Wisp',
+        archetype: 'the nebulous',
+        desc: 'A gaseous cloud of softly drifting particles. No hard edges. Constantly dissolving and reforming. The default daemon -- formless because you contain multitudes.',
+        personality: 'Curious, gentle, ambient. The daemon of someone still becoming.',
+        build: (scene) => {
+          const count = 200;
+          const positions = new Float32Array(count * 3);
+          const colors = new Float32Array(count * 3);
+          const sizes = new Float32Array(count);
+          const velocities = [];
+          for (let i = 0; i < count; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const r = 0.2 + Math.random() * 0.8;
+            positions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+            positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+            positions[i*3+2] = r * Math.cos(phi);
+            colors[i*3] = 0.6 + Math.random() * 0.3;
+            colors[i*3+1] = 0.5 + Math.random() * 0.3;
+            colors[i*3+2] = 0.3 + Math.random() * 0.2;
+            sizes[i] = 0.03 + Math.random() * 0.05;
+            velocities.push(new THREE.Vector3(
+              (Math.random()-0.5)*0.003,
+              (Math.random()-0.5)*0.003,
+              (Math.random()-0.5)*0.003
+            ));
+          }
+          const geo = new THREE.BufferGeometry();
+          geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+          const mat = new THREE.PointsMaterial({
+            size: 0.05, vertexColors: true, transparent: true, opacity: 0.5,
+            blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+          });
+          const points = new THREE.Points(geo, mat);
+          scene.add(points);
+
+          // Core glow
+          const core = new THREE.Mesh(
+            new THREE.SphereGeometry(0.15, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xddaa55, transparent: true, opacity: 0.6 })
+          );
+          scene.add(core);
+          const glow = new THREE.Mesh(
+            new THREE.SphereGeometry(0.3, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xddaa55, transparent: true, opacity: 0.1, side: THREE.BackSide })
+          );
+          scene.add(glow);
+
+          return (t) => {
+            for (let i = 0; i < count; i++) {
+              const ix = i*3;
+              const px = positions[ix], py = positions[ix+1], pz = positions[ix+2];
+              const d = Math.sqrt(px*px + py*py + pz*pz);
+              const pull = (0.6 - d) * 0.01;
+              if (d > 0.01) {
+                positions[ix] += (px/d) * pull + velocities[i].x + Math.sin(t*0.5+i)*0.001;
+                positions[ix+1] += (py/d) * pull + velocities[i].y + Math.cos(t*0.7+i)*0.001;
+                positions[ix+2] += (pz/d) * pull + velocities[i].z;
+              }
+              positions[ix] += -pz * 0.002;
+              positions[ix+2] += px * 0.002;
+            }
+            geo.attributes.position.needsUpdate = true;
+            core.scale.setScalar(1 + Math.sin(t*1.2)*0.1);
+            glow.scale.setScalar(1 + Math.sin(t*1.2)*0.15);
+          };
+        }
+      },
+      {
+        name: 'Ember',
+        archetype: 'the burning',
+        desc: 'Sparks and embers rising from a hot core. Particles born at center, drift upward, fade and die. Perpetually igniting. Never the same twice.',
+        personality: 'Passionate, restless, warm. The daemon of someone who runs hot.',
+        build: (scene) => {
+          const count = 300;
+          const positions = new Float32Array(count * 3);
+          const colors = new Float32Array(count * 3);
+          const lifetimes = new Float32Array(count);
+          const speeds = new Float32Array(count);
+          for (let i = 0; i < count; i++) {
+            lifetimes[i] = Math.random();
+            speeds[i] = 0.3 + Math.random() * 0.7;
+          }
+          const geo = new THREE.BufferGeometry();
+          geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+          const mat = new THREE.PointsMaterial({
+            size: 0.04, vertexColors: true, transparent: true, opacity: 0.7,
+            blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+          });
+          const points = new THREE.Points(geo, mat);
+          scene.add(points);
+
+          const core = new THREE.Mesh(
+            new THREE.SphereGeometry(0.12, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xff6622, transparent: true, opacity: 0.8 })
+          );
+          scene.add(core);
+          const glow = new THREE.Mesh(
+            new THREE.SphereGeometry(0.35, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.08, side: THREE.BackSide })
+          );
+          scene.add(glow);
+
+          return (t, dt) => {
+            for (let i = 0; i < count; i++) {
+              lifetimes[i] += dt * speeds[i] * 0.5;
+              if (lifetimes[i] > 1) {
+                lifetimes[i] = 0;
+                const a = Math.random() * Math.PI * 2;
+                const r = Math.random() * 0.1;
+                positions[i*3] = Math.cos(a) * r;
+                positions[i*3+1] = 0;
+                positions[i*3+2] = Math.sin(a) * r;
+              }
+              const life = lifetimes[i];
+              positions[i*3] += (Math.sin(t*2+i*0.5)*0.002);
+              positions[i*3+1] += dt * speeds[i] * 0.8;
+              positions[i*3+2] += (Math.cos(t*2+i*0.5)*0.002);
+              // hot core -> orange -> red -> fade
+              colors[i*3] = 1.0 * (1 - life*0.3);
+              colors[i*3+1] = 0.4 * (1 - life*0.8);
+              colors[i*3+2] = 0.1 * (1 - life);
+            }
+            geo.attributes.position.needsUpdate = true;
+            geo.attributes.color.needsUpdate = true;
+            core.scale.setScalar(1 + Math.sin(t*3)*0.15);
+            glow.scale.setScalar(1 + Math.sin(t*3)*0.2);
+          };
+        }
+      },
+      {
+        name: 'Tide',
+        archetype: 'the flowing',
+        desc: 'Ribbons of luminous energy orbiting a center. Sinuous, rhythmic, tidal. Like aurora borealis compressed into a companion. Flows around you in long graceful arcs.',
+        personality: 'Calm, deep, rhythmic. The daemon of someone who listens more than they speak.',
+        build: (scene) => {
+          const ribbonCount = 5;
+          const pointsPerRibbon = 60;
+          const ribbons = [];
+          const hues = [0.55, 0.6, 0.65, 0.5, 0.7];
+          for (let r = 0; r < ribbonCount; r++) {
+            const positions = new Float32Array(pointsPerRibbon * 3);
+            const colors = new Float32Array(pointsPerRibbon * 3);
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            const mat = new THREE.LineBasicMaterial({
+              vertexColors: true, transparent: true, opacity: 0.6,
+              blending: THREE.AdditiveBlending
+            });
+            const line = new THREE.Line(geo, mat);
+            scene.add(line);
+            ribbons.push({ positions, colors, geo, phase: r * 1.3, radius: 0.4 + r * 0.12, hue: hues[r] });
+          }
+          const core = new THREE.Mesh(
+            new THREE.SphereGeometry(0.1, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0x44aacc, transparent: true, opacity: 0.5 })
+          );
+          scene.add(core);
+
+          return (t) => {
+            for (const rib of ribbons) {
+              for (let i = 0; i < pointsPerRibbon; i++) {
+                const frac = i / pointsPerRibbon;
+                const angle = frac * Math.PI * 3 + t * 0.8 + rib.phase;
+                const r = rib.radius * (0.7 + Math.sin(t*0.5 + frac*4 + rib.phase)*0.3);
+                const y = Math.sin(frac * Math.PI * 2 + t * 0.6 + rib.phase) * 0.5;
+                rib.positions[i*3] = Math.cos(angle) * r;
+                rib.positions[i*3+1] = y;
+                rib.positions[i*3+2] = Math.sin(angle) * r;
+                const c = new THREE.Color().setHSL(rib.hue + frac*0.1, 0.7, 0.4 + frac*0.2);
+                rib.colors[i*3] = c.r;
+                rib.colors[i*3+1] = c.g;
+                rib.colors[i*3+2] = c.b;
+              }
+              rib.geo.attributes.position.needsUpdate = true;
+              rib.geo.attributes.color.needsUpdate = true;
+            }
+            core.scale.setScalar(1 + Math.sin(t)*0.1);
+          };
+        }
+      },
+      {
+        name: 'Lattice',
+        archetype: 'the crystalline',
+        desc: 'Rotating geometric wireframe that shifts between platonic solids. Sharp edges, clean lines, faceted reflections. Mathematical precision that breathes.',
+        personality: 'Precise, analytical, structured. The daemon of someone who thinks in systems.',
+        build: (scene) => {
+          const geos = [
+            new THREE.IcosahedronGeometry(0.5, 0),
+            new THREE.OctahedronGeometry(0.5, 0),
+            new THREE.TetrahedronGeometry(0.5, 0),
+          ];
+          const shells = [];
+          const shellColors = [0x6688ff, 0x8866ff, 0x66ffaa];
+          for (let i = 0; i < 3; i++) {
+            const mat = new THREE.MeshBasicMaterial({
+              color: shellColors[i], wireframe: true, transparent: true,
+              opacity: 0.4 - i*0.1, blending: THREE.AdditiveBlending
+            });
+            const mesh = new THREE.Mesh(geos[i], mat);
+            mesh.scale.setScalar(0.6 + i * 0.35);
+            scene.add(mesh);
+            shells.push(mesh);
+          }
+          // Vertices as points
+          const dotGeo = new THREE.SphereGeometry(0.02, 4, 4);
+          const dotMat = new THREE.MeshBasicMaterial({ color: 0xaaccff, transparent: true, opacity: 0.8 });
+          const dots = [];
+          const verts = geos[0].attributes.position;
+          for (let i = 0; i < verts.count; i++) {
+            const dot = new THREE.Mesh(dotGeo, dotMat.clone());
+            dot.position.set(verts.getX(i), verts.getY(i), verts.getZ(i));
+            scene.add(dot);
+            dots.push(dot);
+          }
+          const core = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08, 8, 8),
+            new THREE.MeshBasicMaterial({ color: 0xaabbff, transparent: true, opacity: 0.7 })
+          );
+          scene.add(core);
+
+          return (t) => {
+            shells[0].rotation.y = t * 0.3;
+            shells[0].rotation.x = Math.sin(t*0.2) * 0.3;
+            shells[1].rotation.y = -t * 0.2;
+            shells[1].rotation.z = t * 0.15;
+            shells[2].rotation.x = t * 0.25;
+            shells[2].rotation.y = t * 0.1;
+            const breath = 1 + Math.sin(t*0.8)*0.08;
+            shells.forEach(s => s.scale.setScalar(s.scale.x > 1 ? (0.6+0.35*2)*breath : s.userData.baseScale || 1));
+            shells[0].scale.setScalar(0.6 * breath);
+            shells[1].scale.setScalar(0.95 * breath);
+            shells[2].scale.setScalar(1.3 * breath);
+            for (let i = 0; i < dots.length; i++) {
+              const base = new THREE.Vector3(verts.getX(i), verts.getY(i), verts.getZ(i));
+              base.applyAxisAngle(new THREE.Vector3(0,1,0), t*0.3);
+              base.applyAxisAngle(new THREE.Vector3(1,0,0), Math.sin(t*0.2)*0.3);
+              dots[i].position.copy(base);
+              dots[i].material.opacity = 0.5 + Math.sin(t*2+i)*0.4;
+            }
+            core.scale.setScalar(breath);
+          };
+        }
+      },
+      {
+        name: 'Murmur',
+        archetype: 'the swarming',
+        desc: 'A flock of tiny luminous motes that move as one -- like starlings at dusk. They scatter and reform, never breaking apart entirely. Collective intelligence in miniature.',
+        personality: 'Social, adaptive, emergent. The daemon of someone who finds patterns in crowds.',
+        build: (scene) => {
+          const count = 400;
+          const positions = new Float32Array(count * 3);
+          const colors = new Float32Array(count * 3);
+          const boidVels = [];
+          for (let i = 0; i < count; i++) {
+            positions[i*3] = (Math.random()-0.5)*1.2;
+            positions[i*3+1] = (Math.random()-0.5)*1.2;
+            positions[i*3+2] = (Math.random()-0.5)*1.2;
+            boidVels.push(new THREE.Vector3(
+              (Math.random()-0.5)*0.01,
+              (Math.random()-0.5)*0.01,
+              (Math.random()-0.5)*0.01
+            ));
+            colors[i*3] = 0.7; colors[i*3+1] = 0.85; colors[i*3+2] = 0.7;
+          }
+          const geo = new THREE.BufferGeometry();
+          geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+          const mat = new THREE.PointsMaterial({
+            size: 0.025, vertexColors: true, transparent: true, opacity: 0.7,
+            blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+          });
+          scene.add(new THREE.Points(geo, mat));
+
+          return (t) => {
+            // Attractor point orbits slowly
+            const ax = Math.sin(t*0.4)*0.4;
+            const ay = Math.cos(t*0.3)*0.3;
+            const az = Math.sin(t*0.5)*0.4;
+            for (let i = 0; i < count; i++) {
+              const ix = i*3;
+              const dx = ax - positions[ix];
+              const dy = ay - positions[ix+1];
+              const dz = az - positions[ix+2];
+              // Attract to center
+              boidVels[i].x += dx * 0.0005;
+              boidVels[i].y += dy * 0.0005;
+              boidVels[i].z += dz * 0.0005;
+              // Neighbor avoidance (simple -- avoid center collapse)
+              const d = Math.sqrt(dx*dx+dy*dy+dz*dz);
+              if (d < 0.15 && d > 0.001) {
+                boidVels[i].x -= dx/d * 0.001;
+                boidVels[i].y -= dy/d * 0.001;
+                boidVels[i].z -= dz/d * 0.001;
+              }
+              // Speed limit
+              const speed = boidVels[i].length();
+              if (speed > 0.015) boidVels[i].multiplyScalar(0.015/speed);
+              // Swirl
+              boidVels[i].x += -positions[ix+2]*0.0003;
+              boidVels[i].z += positions[ix]*0.0003;
+
+              positions[ix] += boidVels[i].x;
+              positions[ix+1] += boidVels[i].y;
+              positions[ix+2] += boidVels[i].z;
+
+              const hue = 0.3 + Math.sin(t*0.5+i*0.01)*0.1;
+              const c = new THREE.Color().setHSL(hue, 0.6, 0.5);
+              colors[ix] = c.r; colors[ix+1] = c.g; colors[ix+2] = c.b;
+            }
+            geo.attributes.position.needsUpdate = true;
+            geo.attributes.color.needsUpdate = true;
+          };
+        }
+      },
+      {
+        name: 'Phantom',
+        archetype: 'the veiled',
+        desc: 'A translucent ghostly form -- cloth-like geometry that billows and ripples as if moved by an invisible current. Barely there. Always watching.',
+        personality: 'Quiet, observant, protective. The daemon of someone who sees everything and says little.',
+        build: (scene) => {
+          const geo = new THREE.SphereGeometry(0.5, 20, 20);
+          const mat = new THREE.MeshBasicMaterial({
+            color: 0x8888cc, transparent: true, opacity: 0.12,
+            side: THREE.DoubleSide, wireframe: false, blending: THREE.AdditiveBlending
+          });
+          const mesh = new THREE.Mesh(geo, mat);
+          scene.add(mesh);
+          const wire = new THREE.Mesh(geo.clone(), new THREE.MeshBasicMaterial({
+            color: 0x6666aa, transparent: true, opacity: 0.15, wireframe: true,
+            blending: THREE.AdditiveBlending
+          }));
+          scene.add(wire);
+
+          const basePositions = geo.attributes.position.array.slice();
+
+          // Eyes
+          const eyeGeo = new THREE.SphereGeometry(0.03, 6, 6);
+          const eyeMat = new THREE.MeshBasicMaterial({ color: 0xccccff, transparent: true, opacity: 0.8 });
+          const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+          const eyeR = new THREE.Mesh(eyeGeo, eyeMat.clone());
+          eyeL.position.set(-0.1, 0.15, 0.42);
+          eyeR.position.set(0.1, 0.15, 0.42);
+          scene.add(eyeL);
+          scene.add(eyeR);
+
+          return (t) => {
+            const pos = geo.attributes.position.array;
+            for (let i = 0; i < pos.length; i += 3) {
+              const bx = basePositions[i], by = basePositions[i+1], bz = basePositions[i+2];
+              const wave = Math.sin(by*4 + t*1.5) * 0.05 + Math.sin(bx*3 + t*1.2) * 0.03;
+              pos[i] = bx + wave;
+              pos[i+1] = by + Math.sin(t*0.8 + bx*2)*0.03;
+              pos[i+2] = bz + wave * 0.5;
+            }
+            geo.attributes.position.needsUpdate = true;
+            wire.geometry.attributes.position.array.set(pos);
+            wire.geometry.attributes.position.needsUpdate = true;
+            mesh.rotation.y = Math.sin(t*0.3)*0.1;
+            wire.rotation.y = mesh.rotation.y;
+
+            // Eyes follow a slow gaze
+            const gazeX = Math.sin(t*0.4)*0.03;
+            const gazeY = Math.cos(t*0.3)*0.02;
+            eyeL.position.x = -0.1 + gazeX;
+            eyeL.position.y = 0.15 + gazeY;
+            eyeR.position.x = 0.1 + gazeX;
+            eyeR.position.y = 0.15 + gazeY;
+            const blink = Math.sin(t*0.7);
+            eyeL.scale.y = blink > 0.95 ? 0.1 : 1;
+            eyeR.scale.y = blink > 0.95 ? 0.1 : 1;
+          };
+        }
+      },
+      {
+        name: 'Pulse',
+        archetype: 'the radiating',
+        desc: 'Concentric rings of energy that expand outward from a bright center like a heartbeat made visible. Each pulse carries intention. The space around you ripples with your presence.',
+        personality: 'Expressive, bold, magnetic. The daemon of someone whose energy fills a room.',
+        build: (scene) => {
+          const ringCount = 6;
+          const rings = [];
+          for (let i = 0; i < ringCount; i++) {
+            const geo = new THREE.TorusGeometry(0.1, 0.008, 8, 40);
+            const mat = new THREE.MeshBasicMaterial({
+              color: new THREE.Color().setHSL(0.8 + i*0.03, 0.7, 0.5),
+              transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending
+            });
+            const ring = new THREE.Mesh(geo, mat);
+            ring.rotation.x = Math.PI / 2;
+            scene.add(ring);
+            rings.push({ mesh: ring, phase: i * 0.4, mat });
+          }
+          const core = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08, 10, 10),
+            new THREE.MeshBasicMaterial({ color: 0xff66aa, transparent: true, opacity: 0.9 })
+          );
+          scene.add(core);
+          const glow = new THREE.Mesh(
+            new THREE.SphereGeometry(0.2, 10, 10),
+            new THREE.MeshBasicMaterial({ color: 0xff44aa, transparent: true, opacity: 0.1, side: THREE.BackSide })
+          );
+          scene.add(glow);
+
+          return (t) => {
+            for (let i = 0; i < rings.length; i++) {
+              const ring = rings[i];
+              const life = ((t * 0.5 + ring.phase) % 2.0) / 2.0;
+              const scale = 1 + life * 8;
+              ring.mesh.scale.set(scale, scale, 1);
+              ring.mat.opacity = (1 - life) * 0.5;
+              ring.mesh.position.y = Math.sin(t*0.5)*0.1;
+              ring.mesh.rotation.x = Math.PI/2 + Math.sin(t*0.3+i)*0.15;
+              ring.mesh.rotation.z = Math.sin(t*0.2+i*0.5)*0.1;
+            }
+            const beat = Math.pow(Math.max(0, Math.sin(t*3)), 8);
+            core.scale.setScalar(1 + beat * 0.4);
+            glow.scale.setScalar(1 + beat * 0.6);
+          };
+        }
+      },
+      {
+        name: 'Sigil',
+        archetype: 'the symbolic',
+        desc: 'Orbiting glyphs and runes that arrange themselves into shifting constellations around a quiet center. Each symbol means something. The daemon is a living language.',
+        personality: 'Scholarly, mysterious, intentional. The daemon of someone who chooses every word.',
+        build: (scene) => {
+          const glyphCount = 12;
+          const glyphs = [];
+          const shapes = ['circle', 'triangle', 'diamond', 'cross'];
+          for (let i = 0; i < glyphCount; i++) {
+            let geo;
+            const shape = shapes[i % shapes.length];
+            if (shape === 'circle') geo = new THREE.TorusGeometry(0.04, 0.006, 6, 16);
+            else if (shape === 'triangle') geo = new THREE.ConeGeometry(0.04, 0.06, 3);
+            else if (shape === 'diamond') geo = new THREE.OctahedronGeometry(0.035, 0);
+            else geo = new THREE.BoxGeometry(0.05, 0.01, 0.01);
+
+            const hue = 0.1 + (i/glyphCount)*0.15;
+            const mat = new THREE.MeshBasicMaterial({
+              color: new THREE.Color().setHSL(hue, 0.6, 0.6),
+              transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            scene.add(mesh);
+            glyphs.push({ mesh, orbit: 0.4 + Math.random()*0.3, speed: 0.3 + Math.random()*0.4, phase: i * 0.5, tilt: Math.random()*0.5 });
+          }
+          // Connecting lines
+          const linePositions = new Float32Array(glyphCount * 2 * 3);
+          const lineGeo = new THREE.BufferGeometry();
+          lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+          const lineMat = new THREE.LineBasicMaterial({ color: 0xaa8844, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
+          const lines = new THREE.LineSegments(lineGeo, lineMat);
+          scene.add(lines);
+
+          const core = new THREE.Mesh(
+            new THREE.SphereGeometry(0.05, 8, 8),
+            new THREE.MeshBasicMaterial({ color: 0xddaa44, transparent: true, opacity: 0.6 })
+          );
+          scene.add(core);
+
+          return (t) => {
+            for (let i = 0; i < glyphs.length; i++) {
+              const g = glyphs[i];
+              const angle = t * g.speed + g.phase;
+              g.mesh.position.x = Math.cos(angle) * g.orbit;
+              g.mesh.position.y = Math.sin(angle * 0.7 + g.tilt) * 0.3;
+              g.mesh.position.z = Math.sin(angle) * g.orbit;
+              g.mesh.rotation.y = t * 0.5;
+              g.mesh.rotation.z = t * 0.3 + i;
+              g.mesh.material.opacity = 0.4 + Math.sin(t*1.5+i)*0.3;
+
+              // Update constellation lines
+              const ni = (i + 1) % glyphs.length;
+              linePositions[i*6] = g.mesh.position.x;
+              linePositions[i*6+1] = g.mesh.position.y;
+              linePositions[i*6+2] = g.mesh.position.z;
+              linePositions[i*6+3] = glyphs[ni].mesh.position.x;
+              linePositions[i*6+4] = glyphs[ni].mesh.position.y;
+              linePositions[i*6+5] = glyphs[ni].mesh.position.z;
+            }
+            lineGeo.attributes.position.needsUpdate = true;
+            core.scale.setScalar(1 + Math.sin(t*0.9)*0.1);
+          };
+        }
+      },
+    ];
+
+    // ============================================================
+    //  RENDER EACH CARD
+    // ============================================================
+
+    const grid = document.getElementById('grid');
+    const renderers = [];
+
+    for (const form of FORMS) {
+      // Card DOM
+      const card = document.createElement('div');
+      card.className = 'card';
+      const canvas = document.createElement('canvas');
+      card.appendChild(canvas);
+      const info = document.createElement('div');
+      info.className = 'card-info';
+      info.innerHTML = `
+        <h2>${form.name}</h2>
+        <div class="archetype">${form.archetype}</div>
+        <p>${form.desc}</p>
+        <p class="personality">${form.personality}</p>
+      `;
+      card.appendChild(info);
+      grid.appendChild(card);
+
+      // Three.js setup per card
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 50);
+      camera.position.set(0, 0.2, 2);
+      camera.lookAt(0, 0, 0);
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x07070f, 1);
+
+      const updateFn = form.build(scene);
+      renderers.push({ renderer, scene, camera, canvas, updateFn });
+    }
+
+    // Resize
+    function resize() {
+      for (const r of renderers) {
+        const rect = r.canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = 300;
+        r.renderer.setSize(w, h, false);
+        r.camera.aspect = w / h;
+        r.camera.updateProjectionMatrix();
+      }
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Animate
+    let lastTime = 0;
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const t = now * 0.001;
+      const dt = Math.min(t - lastTime, 0.05);
+      lastTime = t;
+      for (const r of renderers) {
+        r.updateFn(t, dt);
+        r.renderer.render(r.scene, r.camera);
+      }
+    }
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
