@@ -7,7 +7,7 @@ export interface DaemonFormDef {
   name: string;
   archetype: string;
   desc: string;
-  build: (scene: THREE.Scene) => (t: number, dt: number) => void;
+  build: (parent: THREE.Object3D) => (t: number, dt: number) => void;
 }
 
 export type FormChangeCallback = (formId: FormId) => void;
@@ -490,6 +490,10 @@ export function initFormSelector(onFormChange: FormChangeCallback) {
   requestAnimationFrame(animatePreviews);
 
   window.addEventListener('resize', () => { if (isOpen) resizePreviews(); });
+}
+
+export function getFormById(id: FormId): DaemonFormDef | undefined {
+  return FORMS.find(f => f.id === id);
 }
 
 export { FORMS };

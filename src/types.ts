@@ -90,6 +90,19 @@ export interface PeerState {
   socialState: SocialState;
   topics: TopicId[];
   displayName: string;
+  formId?: string;
+  lastUpdate?: number;
+}
+
+export interface MSFConfig {
+  fabricUrl: string;
+  adminKey: string;
+  sceneId: string;
+  syncRates: {
+    positionHz: number;
+    stateHz: number;
+  };
+  peerTimeoutMs: number;
 }
 
 export interface ResonanceLink {

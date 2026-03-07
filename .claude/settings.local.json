@@ -7,7 +7,9 @@
       "WebFetch(domain:docs.rp1.com)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:omb.wiki)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm run:*)",
+      "mcp__Snyk__snyk_code_scan"
     ]
   }
 }
