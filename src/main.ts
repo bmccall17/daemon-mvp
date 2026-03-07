@@ -6,6 +6,7 @@ import { PlayerControls } from './controls';
 import { ResonanceSystem, DaemonEntry } from './resonance';
 import { PeerManager } from './peers';
 import { initUI } from './ui';
+import { initFormSelector, FormId } from './form-selector';
 import { SocialState, TopicId } from './types';
 
 // --- Setup ---
@@ -41,6 +42,12 @@ initUI(
     playerDaemon.setTopics(topics);
   },
 );
+
+// Form selector
+initFormSelector((formId: FormId) => {
+  console.log(`Daemon form selected: ${formId}`);
+  // TODO: swap player daemon's visual form
+});
 
 // --- Game Loop ---
 function animate() {
