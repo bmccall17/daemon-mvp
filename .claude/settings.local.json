@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:omb.metaverse-standards.org)",
+      "WebSearch",
+      "WebFetch(domain:www.prweb.com)",
+      "WebFetch(domain:docs.rp1.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:omb.wiki)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
+  }
+}
