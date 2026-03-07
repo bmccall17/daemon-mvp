@@ -2,3 +2,4 @@ node_modules
 dist
 .env
 *.local
+# docs/ is intentionally tracked -- it's the GitHub Pages build output

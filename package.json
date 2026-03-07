@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "vite build && npx gh-pages -d dist"
+    "deploy": "vite build"
   },
   "author": "Brett McCall",
   "license": "MIT",
@@ -16,8 +16,5 @@
     "three": "^0.183.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
-  },
-  "devDependencies": {
-    "gh-pages": "^6.3.0"
   }
 }
