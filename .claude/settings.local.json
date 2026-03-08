@@ -32,7 +32,10 @@
       "Bash(scp:*)",
       "Bash(ssh:*)",
       "Bash(npx tsc:*)",
-      "mcp__manifolder__delete_object"
+      "mcp__manifolder__delete_object",
+      "Bash(xargs cat:*)",
+      "Bash(node:*)",
+      "WebFetch(domain:docs.openclaw.ai)"
     ]
   }
 }

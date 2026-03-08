@@ -19,6 +19,8 @@ export class MSFBridge {
   private connected = false;
   private lastPublishTime = 0;
   private isPublishing = false;
+  private publishFailCount = 0;
+  private publishDisabled = false;
 
   constructor(config: MSFConfig) {
     this.config = config;
@@ -108,6 +110,7 @@ export class MSFBridge {
     displayName: string;
   }): Promise<void> {
     if (!this.connected || !this.client || !this.scopeId || !this.sceneRootId) return;
+    if (this.publishDisabled) return;
 
     const now = Date.now();
     const positionInterval = 1000 / this.config.syncRates.positionHz;
@@ -118,8 +121,6 @@ export class MSFBridge {
     this.lastPublishTime = now;
 
     try {
-      // Encode all state in name since MSF doesn't support properties on scene objects
-      // Format: daemon:sessionId:displayName:formId:socialState:timestamp:topicsJSON
       const topicsStr = JSON.stringify(state.topics);
       const objName = `daemon:${SESSION_ID}:${state.displayName.slice(0, 20)}:${state.formId}:${state.socialState}:${now}:${topicsStr}`;
       const modelUrl = `https://bmccall17.github.io/daemon-mvp/models/${state.formId}.glb`;
@@ -132,22 +133,73 @@ export class MSFBridge {
           position: state.position,
           resourceReference: modelUrl,
         });
+        this.publishFailCount = 0;
       } else {
-        const obj = await this.client.createObject({
-          scopeId: this.scopeId,
-          parentId: this.sceneRootId,
-          name: objName,
-          position: state.position,
-          resourceReference: modelUrl,
-        });
-        this.playerObjectId = obj.id;
-        console.log('[MSF Bridge] Created player object:', this.playerObjectId);
+        // Try to reclaim a stale object from our session before creating new
+        const existingId = await this.findReclaimableObject();
+        if (existingId) {
+          await this.client.updateObject({
+            scopeId: this.scopeId,
+            objectId: existingId,
+            name: objName,
+            position: state.position,
+            resourceReference: modelUrl,
+          });
+          this.playerObjectId = existingId;
+          this.publishFailCount = 0;
+          console.log('[MSF Bridge] Reclaimed existing object:', this.playerObjectId);
+        } else {
+          const obj = await this.client.createObject({
+            scopeId: this.scopeId,
+            parentId: this.sceneRootId,
+            name: objName,
+            position: state.position,
+            resourceReference: modelUrl,
+          });
+          this.playerObjectId = obj.id;
+          this.publishFailCount = 0;
+          console.log('[MSF Bridge] Created player object:', this.playerObjectId);
+        }
       }
     } catch (err) {
-      console.error('[MSF Bridge] Publish failed:', err);
+      this.publishFailCount++;
+      if (this.publishFailCount >= 5) {
+        this.publishDisabled = true;
+        console.error('[MSF Bridge] Publish disabled after', this.publishFailCount, 'consecutive failures. Last error:', err);
+      } else {
+        console.warn('[MSF Bridge] Publish failed (attempt', this.publishFailCount + '):', err);
+      }
     } finally {
       this.isPublishing = false;
     }
+  }
+
+  private async findReclaimableObject(): Promise<string | null> {
+    try {
+      const objects = await this.client.listObjects({
+        scopeId: this.scopeId,
+        anchorObjectId: this.sceneRootId,
+      });
+      for (const obj of objects) {
+        if (obj.id === this.sceneRootId) continue;
+        if (!obj.name?.startsWith('daemon:')) continue;
+        const parts = obj.name.split(':');
+        if (parts.length >= 7) {
+          // Reclaim any stale daemon object (ours or ghost)
+          const ts = parseInt(parts[5], 10);
+          if (!isNaN(ts) && Date.now() - ts > 30000) {
+            console.log('[MSF Bridge] Found reclaimable object:', obj.id, obj.name);
+            return obj.id;
+          }
+        } else {
+          // Old format ghost — reclaimable
+          return obj.id;
+        }
+      }
+    } catch (e) {
+      console.warn('[MSF Bridge] findReclaimableObject failed:', e);
+    }
+    return null;
   }
 
   async fetchPeers(): Promise<PeerState[]> {
