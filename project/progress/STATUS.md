@@ -64,7 +64,7 @@
 | Blocker | Since | Action | Status |
 |---------|-------|--------|--------|
 | RP1 signup portal down | 2026-03-07 | Completed signup | RESOLVED |
-| Cannot Load Scene in RP1 / `web/` returns 404 | 2026-03-08 | Asking dev team for viewer access and `.glb` renderer support | ACTIVE |
+| Cannot Load Scene in RP1 / `web/` returns 404 | 2026-03-08 | Used Antigravity to inject models directly to Scene Assembler (`daemon_coordinates.json`) | PARTIAL (visible in assembler) |
 
 ## Day 1 Summary (March 7)
 
@@ -80,13 +80,15 @@ All 5 phases complete. Built from zero to:
 
 ## Day 2 Plan (March 8)
 
+## Day 2 Plan (March 8)
+
 1. ~~Manual browser testing: form swap, config UI flows, sim peer variety~~ (DONE)
 2. ~~Fabric connection test: enter creds, verify green dot, check console~~ (DONE)
 3. ~~Two-tab sync test: both tabs connected, see each other's daemons~~ (DONE)
 4. ~~Fix MSF ghost object and spawn bug (ADR-007)~~ (DONE)
 5. ~~Fix MSF `Data too long for column Name_wsRMPObjectId` DB Error by moving payload to properties~~ (DONE)
-6. Demo prep: walkthrough script for judges
-7. Figure out how to load the `daemon-social-space` in the RP1 native viewer (currently blocked by 404 on `/web/`)
+6. ~~Figure out how to load the `daemon-social-space` models. Loaded into Scene Assembler at Jordan College (Oxford, UK)! (ADR-009)~~ (DONE)
+7. Demo prep: walkthrough script for judges
 8. Polish if time: reconnect on drop, smoother sim peer wander patterns
 
 ## Architecture Decisions
@@ -100,3 +102,4 @@ See `project/adr/` for full records:
 - [ADR-006](../adr/006-manifolderclient-browser-loading.md) — ManifolderClient browser loading strategy
 - [ADR-007](../adr/007-msf-ghost-object-fix.md) — MSF Ghost Object and Spawn Bug Fix
 - [ADR-008](../adr/008-rp1-viewer-handoff.md) — Handoff to Claude Code CLI for RP1 Viewer Blocker
+- [ADR-009](../adr/009-rp1-model-integration.md) — RP1 Model Integration & Material Conversion

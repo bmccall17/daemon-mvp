@@ -91,7 +91,7 @@ initFormSelector((formId: FormId) => {
     exportDaemon.setForm(formId);
 
     // Run update a few times to spread things out and establish the form
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 150; i++) {
       exportDaemon.update(0.016);
     }
 

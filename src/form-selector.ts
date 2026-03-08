@@ -44,7 +44,7 @@ const FORMS: DaemonFormDef[] = [
         size: 0.05, vertexColors: true, transparent: true, opacity: 0.5,
         blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
       })));
-      const core = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 10), new THREE.MeshBasicMaterial({ color: 0xddaa55, transparent: true, opacity: 0.6 }));
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 10), new THREE.MeshStandardMaterial({ color: 0xddaa55, emissive: 0xddaa55, emissiveIntensity: 2, transparent: true, opacity: 0.8 }));
       scene.add(core);
       return (t) => {
         for (let i = 0; i < count; i++) {
@@ -78,7 +78,7 @@ const FORMS: DaemonFormDef[] = [
         size: 0.04, vertexColors: true, transparent: true, opacity: 0.7,
         blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
       })));
-      const core = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 10), new THREE.MeshBasicMaterial({ color: 0xff6622, transparent: true, opacity: 0.8 }));
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 10), new THREE.MeshStandardMaterial({ color: 0xff6622, emissive: 0xff6622, emissiveIntensity: 2, transparent: true, opacity: 0.9 }));
       scene.add(core);
       return (t, dt) => {
         for (let i = 0; i < count; i++) {
@@ -112,7 +112,7 @@ const FORMS: DaemonFormDef[] = [
         scene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })));
         ribbons.push({ positions, colors, geo, phase: r * 1.3, radius: 0.35 + r * 0.1, hue: hues[r] });
       }
-      const core = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), new THREE.MeshBasicMaterial({ color: 0x44aacc, transparent: true, opacity: 0.5 }));
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), new THREE.MeshStandardMaterial({ color: 0x44aacc, emissive: 0x44aacc, emissiveIntensity: 2, transparent: true, opacity: 0.8 }));
       scene.add(core);
       return (t) => {
         for (const rib of ribbons) {
@@ -143,11 +143,11 @@ const FORMS: DaemonFormDef[] = [
       const shells: THREE.Mesh[] = [];
       const scales = [0.5, 0.8, 1.1];
       for (let i = 0; i < 3; i++) {
-        const mesh = new THREE.Mesh(geos[i], new THREE.MeshBasicMaterial({ color: shellColors[i], wireframe: true, transparent: true, opacity: 0.4 - i * 0.1, blending: THREE.AdditiveBlending }));
+        const mesh = new THREE.Mesh(geos[i], new THREE.MeshStandardMaterial({ color: shellColors[i], emissive: shellColors[i], emissiveIntensity: 1, wireframe: true, transparent: true, opacity: 0.6 - i * 0.1, blending: THREE.AdditiveBlending }));
         mesh.scale.setScalar(scales[i]);
         scene.add(mesh); shells.push(mesh);
       }
-      const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0xaabbff, transparent: true, opacity: 0.7 }));
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshStandardMaterial({ color: 0xaabbff, emissive: 0xaabbff, emissiveIntensity: 2, transparent: true, opacity: 0.9 }));
       scene.add(core);
       return (t) => {
         const b = 1 + Math.sin(t * 0.8) * 0.08;
@@ -204,13 +204,13 @@ const FORMS: DaemonFormDef[] = [
     desc: 'Translucent ghostly form. Billowing. Barely there. Always watching.',
     build: (scene) => {
       const geo = new THREE.SphereGeometry(0.4, 16, 16);
-      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x8888cc, transparent: true, opacity: 0.12, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x8888cc, emissive: 0x8888cc, emissiveIntensity: 0.5, transparent: true, opacity: 0.3, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
       scene.add(mesh);
-      const wire = new THREE.Mesh(geo.clone(), new THREE.MeshBasicMaterial({ color: 0x6666aa, transparent: true, opacity: 0.15, wireframe: true, blending: THREE.AdditiveBlending }));
+      const wire = new THREE.Mesh(geo.clone(), new THREE.MeshStandardMaterial({ color: 0x6666aa, emissive: 0x6666aa, emissiveIntensity: 1, transparent: true, opacity: 0.6, wireframe: true, blending: THREE.AdditiveBlending }));
       scene.add(wire);
       const basePos = geo.attributes.position.array.slice();
       const eyeGeo = new THREE.SphereGeometry(0.025, 6, 6);
-      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xccccff, transparent: true, opacity: 0.8 });
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0xccccff, emissive: 0xccccff, emissiveIntensity: 2, transparent: true, opacity: 0.9 });
       const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(-0.08, 0.12, 0.34); scene.add(eyeL);
       const eyeR = new THREE.Mesh(eyeGeo, eyeMat.clone()); eyeR.position.set(0.08, 0.12, 0.34); scene.add(eyeR);
       return (t) => {
@@ -234,14 +234,14 @@ const FORMS: DaemonFormDef[] = [
     archetype: 'the radiating',
     desc: 'Expanding rings. A heartbeat made visible. Energy fills the room.',
     build: (scene) => {
-      const rings: { mesh: THREE.Mesh; phase: number; mat: THREE.MeshBasicMaterial }[] = [];
+      const rings: { mesh: THREE.Mesh; phase: number; mat: THREE.MeshStandardMaterial }[] = [];
       for (let i = 0; i < 6; i++) {
-        const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(0.8 + i * 0.03, 0.7, 0.5), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
+        const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.8 + i * 0.03, 0.7, 0.5), emissive: new THREE.Color().setHSL(0.8 + i * 0.03, 0.7, 0.5), emissiveIntensity: 1, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
         const mesh = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.006, 8, 32), mat);
         mesh.rotation.x = Math.PI / 2; scene.add(mesh);
         rings.push({ mesh, phase: i * 0.4, mat });
       }
-      const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 10), new THREE.MeshBasicMaterial({ color: 0xff66aa, transparent: true, opacity: 0.9 }));
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 10), new THREE.MeshStandardMaterial({ color: 0xff66aa, emissive: 0xff66aa, emissiveIntensity: 2, transparent: true, opacity: 0.9 }));
       scene.add(core);
       return (t) => {
         for (const ring of rings) {
@@ -265,7 +265,7 @@ const FORMS: DaemonFormDef[] = [
       const glyphs: { mesh: THREE.Mesh; orbit: number; speed: number; phase: number; tilt: number }[] = [];
       const shapes = [() => new THREE.TorusGeometry(0.03, 0.005, 6, 12), () => new THREE.ConeGeometry(0.03, 0.05, 3), () => new THREE.OctahedronGeometry(0.03, 0), () => new THREE.BoxGeometry(0.04, 0.008, 0.008)];
       for (let i = 0; i < glyphCount; i++) {
-        const mesh = new THREE.Mesh(shapes[i % 4](), new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(0.1 + (i / glyphCount) * 0.15, 0.6, 0.6), transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending }));
+        const mesh = new THREE.Mesh(shapes[i % 4](), new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.1 + (i / glyphCount) * 0.15, 0.6, 0.6), emissive: new THREE.Color().setHSL(0.1 + (i / glyphCount) * 0.15, 0.6, 0.6), emissiveIntensity: 1, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
         scene.add(mesh);
         glyphs.push({ mesh, orbit: 0.3 + Math.random() * 0.25, speed: 0.3 + Math.random() * 0.4, phase: i * 0.6, tilt: Math.random() * 0.5 });
       }
@@ -273,7 +273,7 @@ const FORMS: DaemonFormDef[] = [
       const lineGeo = new THREE.BufferGeometry();
       lineGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
       scene.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0xaa8844, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending })));
-      const core = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), new THREE.MeshBasicMaterial({ color: 0xddaa44, transparent: true, opacity: 0.6 }));
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), new THREE.MeshStandardMaterial({ color: 0xddaa44, emissive: 0xddaa44, emissiveIntensity: 2, transparent: true, opacity: 0.9 }));
       scene.add(core);
       return (t) => {
         for (let i = 0; i < glyphs.length; i++) {

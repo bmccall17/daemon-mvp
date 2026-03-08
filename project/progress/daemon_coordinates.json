@@ -1,0 +1,288 @@
+[
+    {
+        "sName": "daemon-social-space",
+        "pTransform": {
+            "aPosition": [
+                0,
+                0,
+                0
+            ],
+            "aRotation": [
+                0,
+                0,
+                0,
+                1
+            ],
+            "aScale": [
+                1,
+                1,
+                1
+            ]
+        },
+        "aBound": [
+            150,
+            150,
+            150
+        ],
+        "aChildren": [
+            {
+                "sName": "daemon-ember",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/ember.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        -1.3865505770287765,
+                        1.0048676125049134,
+                        2.1905591334823167
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    0.24460307159039263,
+                    0.8670965025624919,
+                    0.2625223696231842
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 37
+            },
+            {
+                "sName": "daemon-lattice",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/lattice.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        1.9494815869144972,
+                        0.9933613166771273,
+                        3.5345041560688637
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    0.8803692434280161,
+                    0.7655223626548167,
+                    0.8092335850572487
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 38
+            },
+            {
+                "sName": "daemon-murmur",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/murmur.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        2.257816022020858,
+                        0.999627601405589,
+                        0.5810208749620518
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    1.0407934188842773,
+                    0.7544938772916795,
+                    0.810737282037735
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 39
+            },
+            {
+                "sName": "daemon-phantom",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/phantom.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        -0.5278728088922942,
+                        0.995628600955342,
+                        3.458321031444148
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    0.8413406515760987,
+                    0.8000000119209288,
+                    0.8229352967595855
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 40
+            },
+            {
+                "sName": "daemon-pulse",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/pulse.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        1,
+                        1.0032832292871472,
+                        5
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    1.1833600401878361,
+                    0.12813843239189715,
+                    1.1827972881174116
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 41
+            },
+            {
+                "sName": "daemon-sigil",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/sigil.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        3,
+                        0.9858943089859595,
+                        1.5151068904143634
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    1.0536101366205894,
+                    0.5627898183305186,
+                    0.8871288689540273
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 42
+            },
+            {
+                "sName": "daemon-tide",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/tide.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        1.0982594037716713,
+                        0.9911558352441887,
+                        -1.0810941953718824
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    1.4054496884346008,
+                    0.7999557852745056,
+                    1.3624375462532043
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 43
+            },
+            {
+                "sName": "daemon-wisp",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/wisp.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        -0.8896447704186091,
+                        1.005415772862154,
+                        -1.4526714571912667
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    1.2393895387649536,
+                    1.30321204662323,
+                    1.2060969471931458
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 44
+            }
+        ],
+        "wClass": 73,
+        "twObjectIx": 1
+    }
+]
