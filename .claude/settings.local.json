@@ -31,7 +31,8 @@
       "Bash(ls:*)",
       "Bash(scp:*)",
       "Bash(ssh:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "mcp__manifolder__delete_object"
     ]
   }
 }

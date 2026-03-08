@@ -7,6 +7,9 @@ import { FormId } from './form-selector';
  * Vendor MVMF scripts must be loaded in index.html before this runs.
  * Uses createManifolderPromiseClient() from the ManifolderClient ESM module.
  */
+// Unique ID per tab session so players don't collide
+const SESSION_ID = Math.random().toString(36).slice(2, 8);
+
 export class MSFBridge {
   private config: MSFConfig;
   private client: any = null;
@@ -80,6 +83,9 @@ export class MSFBridge {
 
       this.connected = true;
 
+      // Clean up stale ghost objects from previous sessions
+      await this.cleanupGhosts();
+
       // Cleanup hook to delete player object on tab close
       window.addEventListener('beforeunload', () => this.disconnect());
 
@@ -112,39 +118,27 @@ export class MSFBridge {
     this.lastPublishTime = now;
 
     try {
-      const objName = `daemon:${state.displayName.slice(0, 30)}`;
-      const payload = JSON.stringify({
-        formId: state.formId,
-        socialState: state.socialState,
-        topics: state.topics,
-        ts: now,
-      });
+      // Encode all state in name since MSF doesn't support properties on scene objects
+      // Format: daemon:sessionId:displayName:formId:socialState:timestamp:topicsJSON
+      const topicsStr = JSON.stringify(state.topics);
+      const objName = `daemon:${SESSION_ID}:${state.displayName.slice(0, 20)}:${state.formId}:${state.socialState}:${now}:${topicsStr}`;
+      const modelUrl = `https://bmccall17.github.io/daemon-mvp/models/${state.formId}.glb`;
 
       if (this.playerObjectId) {
-        // Using github pages raw URL since that's where the MVP is deployed
-        const modelUrl = `https://bmccall17.github.io/daemon-mvp/models/${state.formId}.glb`;
-
-        // Update existing object position and model
         await this.client.updateObject({
           scopeId: this.scopeId,
           objectId: this.playerObjectId,
           name: objName,
           position: state.position,
           resourceReference: modelUrl,
-          properties: { statePayload: payload },
         });
       } else {
-        // Using github pages raw URL since that's where the MVP is deployed
-        const modelUrl = `https://bmccall17.github.io/daemon-mvp/models/${state.formId}.glb`;
-
-        // Create player object in scene
         const obj = await this.client.createObject({
           scopeId: this.scopeId,
           parentId: this.sceneRootId,
           name: objName,
           position: state.position,
           resourceReference: modelUrl,
-          properties: { statePayload: payload },
         });
         this.playerObjectId = obj.id;
         console.log('[MSF Bridge] Created player object:', this.playerObjectId);
@@ -181,30 +175,20 @@ export class MSFBridge {
         let topics: TopicId[] = [];
         let timestamp = 0;
 
-        // Extract state from properties or fallback to legacy name parsing
-        if (obj.properties?.statePayload) {
-          try {
-            const parsed = JSON.parse(obj.properties.statePayload);
-            formId = parsed.formId || 'wisp';
-            socialState = parsed.socialState || SocialState.OPEN;
-            topics = parsed.topics || [];
-            timestamp = parsed.ts || 0;
-            displayName = obj.name.substring(7); // "daemon:DisplayName"
-          } catch (e) {
-            console.warn('[MSF Bridge] Failed to parse peer statePayload:', e);
-          }
+        // Parse state from name: "daemon:sessionId:displayName:formId:socialState:timestamp:topicsJSON"
+        const parts = obj.name.split(':');
+        if (parts.length >= 7) {
+          const peerSession = parts[1];
+          // Skip our own session
+          if (peerSession === SESSION_ID) continue;
+          displayName = parts[2];
+          formId = parts[3];
+          socialState = parts[4] as SocialState;
+          timestamp = parseInt(parts[5], 10);
+          try { topics = JSON.parse(parts.slice(6).join(':')); } catch { }
         } else {
-          // Legacy check
-          const parts = obj.name.split(':');
-          if (parts.length >= 6) {
-            displayName = parts[1];
-            formId = parts[2];
-            socialState = parts[3] as SocialState;
-            timestamp = parseInt(parts[4], 10);
-            try { topics = JSON.parse(parts.slice(5).join(':')); } catch { }
-          } else {
-            continue; // Not a valid daemon state object
-          }
+          // Not a valid daemon state object (ghost or static model) — skip
+          continue;
         }
 
         // Ignore ghost objects older than timeout (generous 60s to handle clock skew)
@@ -242,6 +226,42 @@ export class MSFBridge {
     } catch (err) {
       console.error('[MSF Bridge] Fetch peers failed:', err);
       return [];
+    }
+  }
+
+  private async cleanupGhosts(): Promise<void> {
+    if (!this.client || !this.scopeId || !this.sceneRootId) return;
+    try {
+      const objects = await this.client.listObjects({
+        scopeId: this.scopeId,
+        anchorObjectId: this.sceneRootId,
+      });
+      const now = Date.now();
+      for (const obj of objects) {
+        if (obj.id === this.sceneRootId) continue;
+        if (!obj.name?.startsWith('daemon:')) continue;
+        // Skip static form models (e.g., "daemon-ember")
+        if (!obj.name.includes(':')) continue;
+
+        const parts = obj.name.split(':');
+        // Old format without session ID (parts < 7) = ghost
+        // Or valid format but stale timestamp
+        let isGhost = parts.length < 7;
+        if (!isGhost && parts.length >= 7) {
+          const ts = parseInt(parts[5], 10);
+          isGhost = isNaN(ts) || now - ts > 60000;
+        }
+        if (isGhost) {
+          console.log('[MSF Bridge] Cleaning up ghost:', obj.name, obj.id);
+          try {
+            await this.client.deleteObject({ scopeId: this.scopeId, objectId: obj.id });
+          } catch (e) {
+            console.warn('[MSF Bridge] Failed to delete ghost:', obj.id, e);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[MSF Bridge] Ghost cleanup failed:', e);
     }
   }
 
