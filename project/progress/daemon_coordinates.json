@@ -282,9 +282,9 @@
                 "twObjectIx": 44
             },
             {
-                "sName": "daemon-deletedcollection",
+                "sName": "daemon-brettamccall-fbx",
                 "pResource": {
-                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/hd_bam_deletedcollection.glb"
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/hd_BrettAMcCall.fbx"
                 },
                 "pTransform": {
                     "aPosition": [
@@ -314,9 +314,9 @@
                 "twObjectIx": 45
             },
             {
-                "sName": "daemon-win",
+                "sName": "daemon-cyrusmccall",
                 "pResource": {
-                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/hd_bam_win.glb"
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/hd_CyrusMcCall.glb"
                 },
                 "pTransform": {
                     "aPosition": [
@@ -344,6 +344,38 @@
                 "aChildren": [],
                 "wClass": 73,
                 "twObjectIx": 46
+            },
+            {
+                "sName": "daemon-brettamccall-stl",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/hd_BrettAMcCall.stl"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        0,
+                        1,
+                        -4
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    1,
+                    1,
+                    1
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 47
             }
         ],
         "wClass": 73,
