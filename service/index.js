@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // --- Middleware ---
 
@@ -61,17 +61,19 @@ function getUserId(req) {
   return null;
 }
 
-// --- Routes ---
+// --- Routes (mounted at both / and /daemons/ for reverse proxy compatibility) ---
 
-app.get('/health', (_req, res) => {
+const router = express.Router();
+
+router.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'daemons', version: '1.0.0' });
 });
 
-app.get('/catalog', (_req, res) => {
+router.get('/catalog', (_req, res) => {
   res.json({ daemons: CATALOG });
 });
 
-app.get('/me', (req, res) => {
+router.get('/me', (req, res) => {
   const userId = getUserId(req);
   if (!userId) {
     return res.status(400).json({ error: 'No user identity found. Send x-user-id header or userId query param.' });
@@ -80,7 +82,7 @@ app.get('/me', (req, res) => {
   res.json({ userId, attachment });
 });
 
-app.post('/attach', (req, res) => {
+router.post('/attach', (req, res) => {
   const userId = getUserId(req);
   if (!userId) {
     return res.status(400).json({ error: 'No user identity found. Send x-user-id header or userId query param.' });
@@ -106,7 +108,7 @@ app.post('/attach', (req, res) => {
   res.json({ userId, attachment: record });
 });
 
-app.post('/detach', (req, res) => {
+router.post('/detach', (req, res) => {
   const userId = getUserId(req);
   if (!userId) {
     return res.status(400).json({ error: 'No user identity found. Send x-user-id header or userId query param.' });
@@ -118,7 +120,7 @@ app.post('/detach', (req, res) => {
   res.json({ userId, attachment: null, detached: had });
 });
 
-app.post('/update', (req, res) => {
+router.post('/update', (req, res) => {
   const userId = getUserId(req);
   if (!userId) {
     return res.status(400).json({ error: 'No user identity found. Send x-user-id header or userId query param.' });
@@ -138,6 +140,10 @@ app.post('/update', (req, res) => {
   console.log(`[UPDATE] User ${userId} updated attachment`);
   res.json({ userId, attachment: current });
 });
+
+// Mount router at both paths
+app.use('/', router);
+app.use('/daemons', router);
 
 // Catch-all: log unknown routes (helps discover what RP1 expects)
 app.all('*', (req, res) => {

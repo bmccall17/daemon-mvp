@@ -280,6 +280,70 @@
                 "aChildren": [],
                 "wClass": 73,
                 "twObjectIx": 44
+            },
+            {
+                "sName": "daemon-deletedcollection",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/hd_bam_deletedcollection.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        -3,
+                        1,
+                        0
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    1,
+                    1,
+                    1
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 45
+            },
+            {
+                "sName": "daemon-win",
+                "pResource": {
+                    "sReference": "https://bmccall17.github.io/daemon-mvp/models/hd_bam_win.glb"
+                },
+                "pTransform": {
+                    "aPosition": [
+                        4,
+                        1,
+                        0
+                    ],
+                    "aRotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "aScale": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "aBound": [
+                    1,
+                    1,
+                    1
+                ],
+                "aChildren": [],
+                "wClass": 73,
+                "twObjectIx": 46
             }
         ],
         "wClass": 73,

@@ -28,7 +28,9 @@
       "mcp__manifolder__get_object",
       "mcp__manifolder__list_resources",
       "mcp__manifolder__find_objects",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(scp:*)",
+      "Bash(ssh:*)"
     ]
   }
 }
