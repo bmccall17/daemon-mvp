@@ -64,6 +64,7 @@
 | Blocker | Since | Action | Status |
 |---------|-------|--------|--------|
 | RP1 signup portal down | 2026-03-07 | Completed signup | RESOLVED |
+| Cannot Load Scene in RP1 / `web/` returns 404 | 2026-03-08 | Asking dev team for viewer access and `.glb` renderer support | ACTIVE |
 
 ## Day 1 Summary (March 7)
 
@@ -82,8 +83,11 @@ All 5 phases complete. Built from zero to:
 1. ~~Manual browser testing: form swap, config UI flows, sim peer variety~~ (DONE)
 2. ~~Fabric connection test: enter creds, verify green dot, check console~~ (DONE)
 3. ~~Two-tab sync test: both tabs connected, see each other's daemons~~ (DONE)
-4. Demo prep: walkthrough script for judges
-5. Polish if time: reconnect on drop, smoother sim peer wander patterns
+4. ~~Fix MSF ghost object and spawn bug (ADR-007)~~ (DONE)
+5. ~~Fix MSF `Data too long for column Name_wsRMPObjectId` DB Error by moving payload to properties~~ (DONE)
+6. Demo prep: walkthrough script for judges
+7. Figure out how to load the `daemon-social-space` in the RP1 native viewer (currently blocked by 404 on `/web/`)
+8. Polish if time: reconnect on drop, smoother sim peer wander patterns
 
 ## Architecture Decisions
 
