@@ -14,8 +14,8 @@ No argument = full cycle (status → build → test → summary).
 ## Workflow
 
 ### 1. Status Check
-- Read `docs/progress/STATUS.md` for current state
-- Read latest ADRs in `docs/adr/` for recent decisions
+- Read `project/progress/STATUS.md` for current state
+- Read latest ADRs in `project/adr/` for recent decisions
 - Run `git status` and `git log --oneline -5` for repo state
 - Report: what's done, what's in progress, what's blocked
 
@@ -26,7 +26,7 @@ No argument = full cycle (status → build → test → summary).
 
 ### 3. Test Pass
 - If dev server is needed, start with `npm run dev`
-- Run through Tier 1 test checklist from `docs/progress/STATUS.md`
+- Run through Tier 1 test checklist from `project/progress/STATUS.md`
 - Report test results
 
 ### 4. Deploy
@@ -36,23 +36,23 @@ No argument = full cycle (status → build → test → summary).
 - Push to GitHub Pages if requested
 
 ### 5. ADR Management (`/ship adr`)
-- List all ADRs in `docs/adr/`
+- List all ADRs in `project/adr/`
 - Check for any decisions marked "proposed" that need resolution
 - Prompt: "Any new architectural decisions to record?"
 - Create new ADR from template if needed
 
 ### 6. Plan Review (`/ship plan`)
-- Review `docs/progress/STATUS.md` against the integration plan
+- Review `project/progress/STATUS.md` against the integration plan
 - Identify next unblocked work items
 - Check if any blocked items have become unblocked
 - Update STATUS.md with current state
 
 ## ADR Format
-ADRs live in `docs/adr/` and follow the naming convention `NNN-title.md`.
-Template: `docs/adr/000-template.md`
+ADRs live in `project/adr/` and follow the naming convention `NNN-title.md`.
+Template: `project/adr/000-template.md`
 
 ## Progress Tracking
-- `docs/progress/STATUS.md` — single source of truth for project state
+- `project/progress/STATUS.md` — single source of truth for project state
 - Updated by `/ship status` and `/ship plan`
 - Tracks: completed work, in-progress items, blockers, next steps
 

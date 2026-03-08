@@ -9,7 +9,9 @@
       "WebFetch(domain:omb.wiki)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npm run:*)",
-      "mcp__Snyk__snyk_code_scan"
+      "mcp__Snyk__snyk_code_scan",
+      "Bash(curl:*)",
+      "Bash(kill %1:*)"
     ]
   }
 }

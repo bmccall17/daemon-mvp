@@ -30,15 +30,16 @@
 
 | Test | Status | Notes |
 |------|--------|-------|
-| Form swap all 8 forms | NOT TESTED | Click each form card in drawer |
-| Form swap during resonance | NOT TESTED | Change form while resonating |
-| State + topic changes | NOT TESTED | All states, toggle topics |
-| Rapid state changes | NOT TESTED | Spam buttons, check stability |
-| Mobile browser | NOT TESTED | Touch controls + UI |
-| Config UI skip flow | NOT TESTED | Load → Skip → simulated peers |
-| Sim peers show form variety | NOT TESTED | Peers should have random forms |
-| Build clean | PASS | `npm run build` succeeds |
+| Build clean | PASS | `npm run build` succeeds, 17 modules |
 | Snyk scan | PASS | 0 issues found |
+| Dev server | PASS | Vite serves all modules, page loads |
+| Form swap all 8 forms | NEEDS MANUAL | Click each form card in drawer |
+| Form swap during resonance | NEEDS MANUAL | Change form while resonating |
+| State + topic changes | NEEDS MANUAL | All states, toggle topics |
+| Rapid state changes | NEEDS MANUAL | Spam buttons, check stability |
+| Mobile browser | NEEDS MANUAL | Touch controls + UI |
+| Config UI skip flow | NEEDS MANUAL | Load -> Skip -> simulated peers |
+| Sim peers show form variety | NEEDS MANUAL | Peers should have random forms |
 
 ## Tier 2 Test Checklist (when fabric available)
 
@@ -63,24 +64,24 @@
 | `src/daemon.ts` | Rewritten: `setForm()`, `formGroup`, `toSerializable()`, `getFormId()` |
 | `src/main.ts` | Rewritten: config UI flow, MSF bridge init, publish loop, status dot |
 | `src/peers.ts` | Rewritten: dual-mode (simulated/MSF), random forms for sim peers |
-| `src/form-selector.ts` | `build()` signature → `THREE.Object3D`, added `getFormById()` |
+| `src/form-selector.ts` | `build()` signature -> `THREE.Object3D`, added `getFormById()` |
 | `src/types.ts` | Added `MSFConfig`, extended `PeerState` with `formId`/`lastUpdate` |
 | `src/msf-bridge.ts` | NEW: MSF abstraction layer |
 | `src/config-ui.ts` | NEW: Fabric credential input overlay |
+| `project/` | NEW: ADRs + progress moved here (was `docs/`, wiped by Vite build) |
 
 ## Next Steps (Priority Order)
 
-1. Run dev server, test form swapping manually
-2. Test config UI skip flow
-3. Verify sim peer form variety
-4. Deploy to GitHub Pages
-5. Retry hackathon portal
-6. If portal up: complete Phase 4 (ManifolderMCP setup) and Phase 5 (deploy + demo)
+1. Manual browser testing (form swap, config UI, sim peers)
+2. Deploy to GitHub Pages
+3. Retry hackathon portal
+4. If portal up: Phase 4 (ManifolderMCP) + Phase 5 (demo prep)
 
 ## Architecture Decisions
 
-See `docs/adr/` for full records:
+See `project/adr/` for full records:
 - [ADR-001](../adr/001-form-swapping-architecture.md) — Form swapping via `formGroup` + dispose
 - [ADR-002](../adr/002-msf-bridge-dual-mode-peers.md) — MSF bridge + dual-mode peers
 - [ADR-003](../adr/003-daemon-serialization.md) — Serialization format
 - [ADR-004](../adr/004-gotcha-atlas-framework.md) — GOTCHA/ATLAS frameworks
+- [ADR-005](../adr/005-project-docs-location.md) — Moved project docs to `project/` (Vite build was wiping `docs/`)
