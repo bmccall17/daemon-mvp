@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { MSFConfig, PeerState, SocialState, TopicId } from './types';
 import { FormId } from './form-selector';
 
@@ -206,20 +207,34 @@ export class MSFBridge {
           }
         }
 
-        // Ignore ghost objects older than timeout (or invalid timestamps)
+        // Ignore ghost objects older than timeout (generous 60s to handle clock skew)
         const now = Date.now();
-        if (isNaN(timestamp) || now - timestamp > 10000 || timestamp <= 0) continue;
+        if (timestamp > 0 && !isNaN(timestamp) && now - timestamp > 60000) continue;
 
-        const pos = obj.position || obj.transform?.position || { x: 0, y: 0, z: 0 };
+        // Extract position — MSF APIs return position in various formats
+        const pos = obj.position
+          || obj.transform?.position
+          || (obj.transform ? {
+            x: obj.transform.Position_X ?? obj.transform.position_x ?? 0,
+            y: obj.transform.Position_Y ?? obj.transform.position_y ?? 0,
+            z: obj.transform.Position_Z ?? obj.transform.position_z ?? 0,
+          } : null)
+          || { x: 0, y: 0, z: 0 };
+
+        console.log('[MSF Bridge] Peer found:', obj.name, 'pos:', pos, 'raw:', JSON.stringify(obj).slice(0, 300));
 
         peers.push({
           id: obj.id,
-          position: pos as any,
+          position: new THREE.Vector3(
+            parseFloat(pos.x) || 0,
+            parseFloat(pos.y) || 0,
+            parseFloat(pos.z) || 0,
+          ),
           socialState: socialState || SocialState.OPEN,
           topics,
           displayName: displayName || 'Unknown',
           formId,
-          lastUpdate: timestamp,
+          lastUpdate: timestamp || now,
         });
       }
 

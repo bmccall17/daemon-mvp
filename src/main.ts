@@ -37,8 +37,9 @@ const toneReactor = new ToneReactor(playerDaemon);
 const thoughtBubbles = new ThoughtBubbleSystem(scene, playerDaemon.group);
 const _chatUI = new ChatUI(toneReactor, thoughtBubbles);
 
-// Player state
-let playerTopics: TopicId[] = [];
+// Player state — start with default topics so resonance works immediately
+let playerTopics: TopicId[] = ['spatial-computing', 'ai-agents'];
+playerDaemon.setTopics(playerTopics);
 let msfBridge: MSFBridge | null = null;
 
 // Connection status indicator
@@ -146,6 +147,9 @@ initFormSelector((formId: FormId) => {
 async function init() {
   const result = await showConfigUI();
 
+  // Always spawn some simulated peers for a lively scene
+  peerManager.spawnSimulatedPeers(5);
+
   if (result.mode === 'msf' && result.config) {
     setConnectionStatus('connecting');
     msfBridge = new MSFBridge(result.config);
@@ -156,12 +160,9 @@ async function init() {
     } else {
       setConnectionStatus('disconnected');
       msfBridge = null;
-      // Fall back to simulated
-      peerManager.spawnSimulatedPeers(5);
     }
   } else {
     setConnectionStatus('disconnected');
-    peerManager.spawnSimulatedPeers(5);
   }
 
   // Start game loop

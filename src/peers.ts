@@ -42,12 +42,7 @@ export class PeerManager {
   connectToMSF(bridge: MSFBridge) {
     this.mode = 'msf';
     this.msfBridge = bridge;
-    // Remove simulated peers
-    for (const peer of this.peers) {
-      this.scene.remove(peer.avatar.group);
-      this.scene.remove(peer.daemon.group);
-    }
-    this.peers = [];
+    // Keep simulated peers as ambient NPCs
   }
 
   disconnectMSF() {
@@ -103,10 +98,11 @@ export class PeerManager {
   }
 
   update(dt: number, playerPos: THREE.Vector3) {
+    // Always update simulated peers
+    this.updateSimulated(dt, playerPos);
+    // Additionally update MSF peers when connected
     if (this.mode === 'msf') {
       this.updateMSFPeers(dt);
-    } else {
-      this.updateSimulated(dt, playerPos);
     }
   }
 
@@ -155,6 +151,9 @@ export class PeerManager {
 
       try {
         const peerStates = await this.msfBridge.fetchPeers();
+        if (peerStates.length > 0) {
+          console.log('[PeerManager] MSF peers found:', peerStates.length, peerStates.map(p => `${p.displayName}@(${p.position.x.toFixed(1)},${p.position.z.toFixed(1)})`));
+        }
         const now = Date.now();
 
         // Update or create peers
@@ -201,19 +200,20 @@ export class PeerManager {
   }
 
   getEntries() {
-    if (this.mode === 'msf') {
-      return Array.from(this.msfPeers.values()).map(p => ({
-        id: p.id,
-        daemon: p.daemon,
-        position: p.avatar.getPosition(),
-        topics: p.daemon.getTopics(),
-      }));
-    }
-    return this.peers.map(p => ({
+    const entries = this.peers.map(p => ({
       id: p.id,
       daemon: p.daemon,
       position: p.avatar.getPosition(),
       topics: p.topics,
     }));
+    if (this.mode === 'msf') {
+      entries.push(...Array.from(this.msfPeers.values()).map(p => ({
+        id: p.id,
+        daemon: p.daemon,
+        position: p.avatar.getPosition(),
+        topics: p.daemon.getTopics(),
+      })));
+    }
+    return entries;
   }
 }
