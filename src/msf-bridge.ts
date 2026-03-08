@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MSFConfig, PeerState, SocialState, TopicId } from './types';
+import { MSFConfig, PeerState, SocialState, TopicId, TOPICS } from './types';
 import { FormId } from './form-selector';
 
 /**
@@ -9,6 +9,27 @@ import { FormId } from './form-selector';
  */
 // Unique ID per tab session so players don't collide
 const SESSION_ID = Math.random().toString(36).slice(2, 8);
+
+// Compact encoding helpers to fit within MSF's ~64-char name column limit
+const STATE_SHORT: Record<string, string> = {
+  [SocialState.OPEN]: 'O',
+  [SocialState.SEEKING]: 'S',
+  [SocialState.FOCUSED]: 'F',
+  [SocialState.BROADCASTING]: 'B',
+  [SocialState.DND]: 'D',
+};
+const SHORT_STATE: Record<string, SocialState> = Object.fromEntries(
+  Object.entries(STATE_SHORT).map(([k, v]) => [v, k as SocialState])
+) as Record<string, SocialState>;
+
+const TOPIC_IDS = TOPICS.map(t => t.id);
+
+function encodeTopics(topics: TopicId[]): string {
+  return topics.map(t => TOPIC_IDS.indexOf(t)).filter(i => i >= 0).join('');
+}
+function decodeTopics(s: string): TopicId[] {
+  return s.split('').map(c => TOPIC_IDS[parseInt(c, 10)]).filter(Boolean);
+}
 
 export class MSFBridge {
   private config: MSFConfig;
@@ -121,8 +142,11 @@ export class MSFBridge {
     this.lastPublishTime = now;
 
     try {
-      const topicsStr = JSON.stringify(state.topics);
-      const objName = `daemon:${SESSION_ID}:${state.displayName.slice(0, 20)}:${state.formId}:${state.socialState}:${now}:${topicsStr}`;
+      // Compact format: d:SID:Name:form:S:ts36:topicIndices  (~45 chars max)
+      const st = STATE_SHORT[state.socialState] || 'O';
+      const ts = now.toString(36);
+      const ti = encodeTopics(state.topics);
+      const objName = `d:${SESSION_ID}:${state.displayName.slice(0, 10)}:${state.formId}:${st}:${ts}:${ti}`;
       const modelUrl = `https://bmccall17.github.io/daemon-mvp/models/${state.formId}.glb`;
 
       if (this.playerObjectId) {
@@ -182,11 +206,11 @@ export class MSFBridge {
       });
       for (const obj of objects) {
         if (obj.id === this.sceneRootId) continue;
-        if (!obj.name?.startsWith('daemon:')) continue;
+        if (!obj.name?.startsWith('d:') && !obj.name?.startsWith('daemon:')) continue;
         const parts = obj.name.split(':');
         if (parts.length >= 7) {
-          // Reclaim any stale daemon object (ours or ghost)
-          const ts = parseInt(parts[5], 10);
+          const base = parts[0] === 'd' ? 36 : 10;
+          const ts = parseInt(parts[5], base);
           if (!isNaN(ts) && Date.now() - ts > 30000) {
             console.log('[MSF Bridge] Found reclaimable object:', obj.id, obj.name);
             return obj.id;
@@ -218,8 +242,8 @@ export class MSFBridge {
         if (obj.id === this.sceneRootId) continue;
         // Skip our own object
         if (obj.id === this.playerObjectId) continue;
-        // Only daemon objects (name starts with "daemon:")
-        if (!obj.name?.startsWith('daemon:')) continue;
+        // Only daemon objects (compact "d:" or legacy "daemon:")
+        if (!obj.name?.startsWith('d:') && !obj.name?.startsWith('daemon:')) continue;
 
         let displayName = 'Unknown';
         let formId = 'wisp';
@@ -227,19 +251,24 @@ export class MSFBridge {
         let topics: TopicId[] = [];
         let timestamp = 0;
 
-        // Parse state from name: "daemon:sessionId:displayName:formId:socialState:timestamp:topicsJSON"
         const parts = obj.name.split(':');
-        if (parts.length >= 7) {
-          const peerSession = parts[1];
-          // Skip our own session
-          if (peerSession === SESSION_ID) continue;
+        if (parts[0] === 'd' && parts.length >= 7) {
+          // Compact format: d:SID:Name:form:S:ts36:topicIndices
+          if (parts[1] === SESSION_ID) continue;
+          displayName = parts[2];
+          formId = parts[3];
+          socialState = SHORT_STATE[parts[4]] || SocialState.OPEN;
+          timestamp = parseInt(parts[5], 36);
+          topics = decodeTopics(parts[6] || '');
+        } else if (parts[0] === 'daemon' && parts.length >= 7) {
+          // Legacy format: daemon:SID:Name:form:state:ts10:topicsJSON
+          if (parts[1] === SESSION_ID) continue;
           displayName = parts[2];
           formId = parts[3];
           socialState = parts[4] as SocialState;
           timestamp = parseInt(parts[5], 10);
           try { topics = JSON.parse(parts.slice(6).join(':')); } catch { }
         } else {
-          // Not a valid daemon state object (ghost or static model) — skip
           continue;
         }
 
@@ -291,16 +320,13 @@ export class MSFBridge {
       const now = Date.now();
       for (const obj of objects) {
         if (obj.id === this.sceneRootId) continue;
-        if (!obj.name?.startsWith('daemon:')) continue;
-        // Skip static form models (e.g., "daemon-ember")
-        if (!obj.name.includes(':')) continue;
+        if (!obj.name?.startsWith('d:') && !obj.name?.startsWith('daemon:')) continue;
 
         const parts = obj.name.split(':');
-        // Old format without session ID (parts < 7) = ghost
-        // Or valid format but stale timestamp
         let isGhost = parts.length < 7;
         if (!isGhost && parts.length >= 7) {
-          const ts = parseInt(parts[5], 10);
+          const base = parts[0] === 'd' ? 36 : 10;
+          const ts = parseInt(parts[5], base);
           isGhost = isNaN(ts) || now - ts > 60000;
         }
         if (isGhost) {

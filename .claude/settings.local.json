@@ -35,7 +35,9 @@
       "mcp__manifolder__delete_object",
       "Bash(xargs cat:*)",
       "Bash(node:*)",
-      "WebFetch(domain:docs.openclaw.ai)"
+      "WebFetch(domain:docs.openclaw.ai)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(echo:*)"
     ]
   }
 }
