@@ -174,7 +174,9 @@ export class PeerManager {
           msfPeer!.avatar.setPosition(state.position.x, 0, state.position.z);
           msfPeer!.daemon.setState(state.socialState);
           msfPeer!.daemon.setTopics(state.topics);
-          if (state.formId) msfPeer!.daemon.setForm(state.formId as FormId);
+          if (state.formId && msfPeer!.daemon.getFormId() !== state.formId) {
+            msfPeer!.daemon.setForm(state.formId as FormId);
+          }
         }
 
         // Remove timed-out peers (10s)
