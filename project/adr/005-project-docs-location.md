@@ -3,6 +3,7 @@
 **Status:** accepted
 **Date:** 2026-03-07
 **Deciders:** Brett, Claude
+**AI Context:** Claude Code CLI with Opus 4.6
 
 ## Context
 ADRs and progress tracking were originally placed in `docs/adr/` and `docs/progress/`. However, Vite's build output is configured to `outDir: 'docs'` for GitHub Pages deployment. Vite's default `emptyOutDir: true` wipes the entire `docs/` directory on every build, destroying all ADRs and progress files.

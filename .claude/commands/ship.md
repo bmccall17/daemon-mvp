@@ -39,7 +39,7 @@ No argument = full cycle (status → build → test → summary).
 - List all ADRs in `project/adr/`
 - Check for any decisions marked "proposed" that need resolution
 - Prompt: "Any new architectural decisions to record?"
-- Create new ADR from template if needed
+- Create new ADR from template if needed, ensuring the `AI Context` field accurately records the current model and UI (e.g., "Antigravity on Gemini 3.1 Pro (High)").
 
 ### 6. Plan Review (`/ship plan`)
 - Review `project/progress/STATUS.md` against the integration plan

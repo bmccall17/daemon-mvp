@@ -21,29 +21,10 @@ your daemon is a shape-shifting companion creature that follows you, learns you,
 
 ---
 
-### run locally
-
-```bash
-npm install
-npm run dev
-```
-
-### deploy to github pages
-
-```bash
-npm run build
-# push the dist/ folder, or use gh-pages:
-npx gh-pages -d dist
-```
-
-your site will be live at `https://<username>.github.io/daemon-mvp/`
-
----
-
 ```
          ✦ ──── ･ ｡ﾟ☆: .☽ .｡ﾟ☆. ── ✦✦
 ⠀⠀⠀⠀🜏  🝊  🔮  d a e m o n  🔮  🝊  🜏
          ✦ ──── ･ ｡ﾟ☆: .☽ .｡ﾟ☆. ── ✦✦
 ```
 
-building remote from asheville for the [1st annual open metaverse hackathon](https://omb.metaverse-standards.org/en/hackathon) (GDC weekend, march 7-8 2026). looking for a team -- DM me if you want to explore this one together.
+building remote and solo from Asheville for the [1st annual open metaverse hackathon](https://omb.metaverse-standards.org/en/hackathon) (GDC weekend, march 7-8 2026).

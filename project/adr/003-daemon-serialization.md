@@ -3,6 +3,7 @@
 **Status:** accepted
 **Date:** 2026-03-07
 **Deciders:** Brett, Claude
+**AI Context:** Claude Code CLI with Opus 4.6
 
 ## Context
 To sync daemon state over MSF or any network layer, we need a clean serializable representation of daemon state. The daemon has: form identity, social state, topics, and position.

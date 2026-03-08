@@ -3,6 +3,7 @@
 **Status:** accepted
 **Date:** 2026-03-07
 **Deciders:** Brett, Claude
+**AI Context:** Claude Code CLI with Opus 4.6
 
 ## Context
 The hackathon requires connecting to the MSF spatial fabric for shared multiplayer, but the signup portal (`signup.hackathon.rp1.dev`) is down. We need to build everything we can without credentials and plug in when they become available.

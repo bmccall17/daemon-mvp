@@ -3,6 +3,7 @@
 **Status:** accepted
 **Date:** 2026-03-07
 **Deciders:** Brett, Claude
+**AI Context:** Claude Code CLI with Opus 4.6
 
 ## Context
 The MSF Bridge needs ManifolderClient in the browser to connect to the fabric. ManifolderClient is an ESM module that depends on:

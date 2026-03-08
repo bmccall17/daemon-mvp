@@ -3,6 +3,7 @@
 **Status:** proposed | accepted | deprecated | superseded
 **Date:** YYYY-MM-DD
 **Deciders:** names
+**AI Context:** model/interface
 
 ## Context
 What is the issue that we're seeing that is motivating this decision or change?

@@ -3,6 +3,7 @@
 **Status:** accepted
 **Date:** 2026-03-07
 **Deciders:** Brett, Claude
+**AI Context:** Claude Code CLI with Opus 4.6
 
 ## Context
 The daemon has 8 procedural form definitions in `form-selector.ts`, each with a `build()` function that creates Three.js objects. The original `Daemon` class had hardcoded visuals (particles, core mesh, glow). Form selection existed in the UI but was wired to a `console.log` TODO.

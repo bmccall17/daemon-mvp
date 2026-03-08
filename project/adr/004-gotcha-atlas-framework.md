@@ -3,6 +3,7 @@
 **Status:** accepted
 **Date:** 2026-03-07
 **Deciders:** Brett
+**AI Context:** Claude Code CLI with Opus 4.6
 
 ## Context
 The hackathon integration plan needed a structured approach to manage goals, dependencies, blockers, and phased execution across a 2-day timeline with an external dependency (MSF portal) that might never resolve.
