@@ -14,6 +14,7 @@ export class MSFBridge {
   private playerObjectId: string | null = null;
   private connected = false;
   private lastPublishTime = 0;
+  private isPublishing = false;
 
   constructor(config: MSFConfig) {
     this.config = config;
@@ -77,6 +78,10 @@ export class MSFBridge {
       console.log('[MSF Bridge] Opened scene:', scene.name, 'root:', this.sceneRootId);
 
       this.connected = true;
+
+      // Cleanup hook to delete player object on tab close
+      window.addEventListener('beforeunload', () => this.disconnect());
+
       return true;
     } catch (err) {
       console.error('[MSF Bridge] Connection failed:', err);
@@ -100,6 +105,9 @@ export class MSFBridge {
     const now = Date.now();
     const positionInterval = 1000 / this.config.syncRates.positionHz;
     if (now - this.lastPublishTime < positionInterval) return;
+    if (this.isPublishing) return;
+
+    this.isPublishing = true;
     this.lastPublishTime = now;
 
     try {
@@ -108,7 +116,7 @@ export class MSFBridge {
         await this.client.updateObject({
           scopeId: this.scopeId,
           objectId: this.playerObjectId,
-          name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${JSON.stringify(state.topics)}`,
+          name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${now}:${JSON.stringify(state.topics)}`,
           position: state.position,
         });
       } else {
@@ -116,7 +124,7 @@ export class MSFBridge {
         const obj = await this.client.createObject({
           scopeId: this.scopeId,
           parentId: this.sceneRootId,
-          name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${JSON.stringify(state.topics)}`,
+          name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${now}:${JSON.stringify(state.topics)}`,
           position: state.position,
         });
         this.playerObjectId = obj.id;
@@ -124,6 +132,8 @@ export class MSFBridge {
       }
     } catch (err) {
       console.error('[MSF Bridge] Publish failed:', err);
+    } finally {
+      this.isPublishing = false;
     }
   }
 
@@ -146,15 +156,22 @@ export class MSFBridge {
         // Only daemon objects (name starts with "daemon:")
         if (!obj.name?.startsWith('daemon:')) continue;
 
-        // Parse state from name: "daemon:DisplayName:formId:socialState:topicsJSON"
+        // Parse state from name: "daemon:DisplayName:formId:socialState:timestamp:topicsJSON"
         const parts = obj.name.split(':');
-        if (parts.length < 5) continue;
+        // Legacy check / old ghost objects
+        if (parts.length < 6) continue;
 
         const displayName = parts[1];
         const formId = parts[2];
         const socialState = parts[3] as SocialState;
+        const timestamp = parseInt(parts[4], 10);
+
+        // Ignore ghost objects older than timeout (or invalid timestamps)
+        const now = Date.now();
+        if (isNaN(timestamp) || now - timestamp > 10000) continue;
+
         const topics = (() => {
-          try { return JSON.parse(parts.slice(4).join(':')); } catch { return []; }
+          try { return JSON.parse(parts.slice(5).join(':')); } catch { return []; }
         })();
 
         const pos = obj.position || obj.transform?.position || { x: 0, y: 0, z: 0 };
@@ -166,7 +183,7 @@ export class MSFBridge {
           topics,
           displayName: displayName || 'Unknown',
           formId,
-          lastUpdate: Date.now(),
+          lastUpdate: timestamp,
         });
       }
 
@@ -183,9 +200,9 @@ export class MSFBridge {
         this.client.deleteObject({
           scopeId: this.scopeId,
           objectId: this.playerObjectId,
-        }).catch(() => {});
+        }).catch(() => { });
       }
-      this.client.closeScope({ scopeId: this.scopeId }).catch(() => {});
+      this.client.closeScope({ scopeId: this.scopeId }).catch(() => { });
     }
     this.connected = false;
     this.client = null;

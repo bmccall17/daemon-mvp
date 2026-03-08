@@ -166,15 +166,15 @@ export class PeerManager {
             if (state.formId) daemon.setForm(state.formId as FormId);
             this.scene.add(avatar.group);
             this.scene.add(daemon.group);
-            msfPeer = { id: state.id, avatar, daemon, lastUpdate: now };
+            msfPeer = { id: state.id, avatar, daemon, lastUpdate: state.lastUpdate || now };
             this.msfPeers.set(state.id, msfPeer);
           }
 
-          msfPeer.lastUpdate = now;
-          msfPeer.avatar.setPosition(state.position.x, 0, state.position.z);
-          msfPeer.daemon.setState(state.socialState);
-          msfPeer.daemon.setTopics(state.topics);
-          if (state.formId) msfPeer.daemon.setForm(state.formId as FormId);
+          msfPeer!.lastUpdate = state.lastUpdate || now;
+          msfPeer!.avatar.setPosition(state.position.x, 0, state.position.z);
+          msfPeer!.daemon.setState(state.socialState);
+          msfPeer!.daemon.setTopics(state.topics);
+          if (state.formId) msfPeer!.daemon.setForm(state.formId as FormId);
         }
 
         // Remove timed-out peers (10s)
