@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { SocialState, SOCIAL_STATE_CONFIG, TopicId, TOPICS } from './types';
-import { FormId, getFormById } from './form-selector';
+import { FormId, FormContext, getFormById } from './form-selector';
 
 const FOLLOW_SPEED = 3.0;
 const FOLLOW_DAMPING = 0.92;
@@ -13,7 +13,7 @@ export class Daemon {
   private beaconGlow: THREE.Mesh;
 
   private formId: FormId = 'wisp';
-  private formUpdateFn: ((t: number, dt: number) => void) | null = null;
+  private formUpdateFn: ((t: number, dt: number, ctx?: FormContext) => void) | null = null;
   private formTime = 0;
 
   private targetPosition = new THREE.Vector3();
@@ -29,6 +29,9 @@ export class Daemon {
   // Resonance state (set externally)
   resonanceStrength = 0;
   resonanceColor = new THREE.Color(1, 1, 1);
+  nearbyDirection: THREE.Vector3 | null = null;
+  nearbyDistance = Infinity;
+  excitementLevel = 0;
 
   constructor() {
     this.group = new THREE.Group();
@@ -172,10 +175,17 @@ export class Daemon {
     // Breathing
     this.breathPhase += dt * 1.0;
 
-    // Run the form's procedural animation
+    // Run the form's procedural animation with resonance context
     this.formTime += dt;
     if (this.formUpdateFn) {
-      this.formUpdateFn(this.formTime, dt);
+      const ctx: FormContext = {
+        resonanceStrength: this.resonanceStrength,
+        resonanceColor: this.resonanceColor,
+        nearbyDirection: this.nearbyDirection,
+        nearbyDistance: this.nearbyDistance,
+        excitementLevel: this.excitementLevel,
+      };
+      this.formUpdateFn(this.formTime, dt, ctx);
     }
 
     // Beacon animation

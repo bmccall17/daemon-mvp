@@ -2,12 +2,20 @@ import * as THREE from 'three';
 
 export type FormId = 'wisp' | 'ember' | 'tide' | 'lattice' | 'murmur' | 'phantom' | 'pulse' | 'sigil';
 
+export interface FormContext {
+  resonanceStrength: number;       // 0..1
+  resonanceColor: THREE.Color;
+  nearbyDirection: THREE.Vector3 | null;  // toward nearest resonating daemon
+  nearbyDistance: number;          // Infinity if none
+  excitementLevel: number;        // 0..1, from tone input
+}
+
 export interface DaemonFormDef {
   id: FormId;
   name: string;
   archetype: string;
   desc: string;
-  build: (parent: THREE.Object3D) => (t: number, dt: number) => void;
+  build: (parent: THREE.Object3D) => (t: number, dt: number, ctx?: FormContext) => void;
 }
 
 export type FormChangeCallback = (formId: FormId) => void;
@@ -46,16 +54,24 @@ const FORMS: DaemonFormDef[] = [
       })));
       const core = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 10), new THREE.MeshStandardMaterial({ color: 0xddaa55, emissive: 0xddaa55, emissiveIntensity: 2, transparent: true, opacity: 0.8 }));
       scene.add(core);
-      return (t) => {
+      return (t, _dt, ctx) => {
+        const rs = ctx?.resonanceStrength ?? 0;
+        const dir = ctx?.nearbyDirection;
+        const spread = 0.5 + rs * 0.4; // cloud elongates when resonating
         for (let i = 0; i < count; i++) {
           const ix = i * 3;
           const d = Math.sqrt(positions[ix] ** 2 + positions[ix + 1] ** 2 + positions[ix + 2] ** 2);
-          const pull = (0.5 - d) * 0.01;
+          const pull = (spread - d) * 0.01;
           if (d > 0.01) { positions[ix] += (positions[ix] / d) * pull + velocities[i].x; positions[ix + 1] += (positions[ix + 1] / d) * pull + velocities[i].y; positions[ix + 2] += (positions[ix + 2] / d) * pull + velocities[i].z; }
           positions[ix] += -positions[ix + 2] * 0.002; positions[ix + 2] += positions[ix] * 0.002;
+          // Drift toward neighbor
+          if (rs > 0 && dir) {
+            const drift = rs * 0.003;
+            positions[ix] += dir.x * drift; positions[ix + 1] += dir.y * drift; positions[ix + 2] += dir.z * drift;
+          }
         }
         geo.attributes.position.needsUpdate = true;
-        core.scale.setScalar(1 + Math.sin(t * 1.2) * 0.1);
+        core.scale.setScalar(1 + Math.sin(t * 1.2) * 0.1 + rs * 0.2);
       };
     },
   },
@@ -80,17 +96,25 @@ const FORMS: DaemonFormDef[] = [
       })));
       const core = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 10), new THREE.MeshStandardMaterial({ color: 0xff6622, emissive: 0xff6622, emissiveIntensity: 2, transparent: true, opacity: 0.9 }));
       scene.add(core);
-      return (t, dt) => {
+      return (t, dt, ctx) => {
+        const rs = ctx?.resonanceStrength ?? 0;
+        const dir = ctx?.nearbyDirection;
+        const speedMult = 1 + rs * 0.8; // faster sparks when resonating
         for (let i = 0; i < count; i++) {
-          lifetimes[i] += dt * speeds[i] * 0.5;
+          lifetimes[i] += dt * speeds[i] * 0.5 * speedMult;
           if (lifetimes[i] > 1) { lifetimes[i] = 0; const a = Math.random() * Math.PI * 2; const r = Math.random() * 0.08; positions[i * 3] = Math.cos(a) * r; positions[i * 3 + 1] = 0; positions[i * 3 + 2] = Math.sin(a) * r; }
           positions[i * 3] += Math.sin(t * 2 + i * 0.5) * 0.002;
           positions[i * 3 + 1] += dt * speeds[i] * 0.8;
           positions[i * 3 + 2] += Math.cos(t * 2 + i * 0.5) * 0.002;
+          // Arc sparks sideways toward neighbor
+          if (rs > 0 && dir) {
+            const arc = rs * 0.004 * (1 - lifetimes[i]);
+            positions[i * 3] += dir.x * arc; positions[i * 3 + 2] += dir.z * arc;
+          }
           const l = lifetimes[i]; colors[i * 3] = 1 * (1 - l * 0.3); colors[i * 3 + 1] = 0.4 * (1 - l * 0.8); colors[i * 3 + 2] = 0.1 * (1 - l);
         }
         geo.attributes.position.needsUpdate = true; geo.attributes.color.needsUpdate = true;
-        core.scale.setScalar(1 + Math.sin(t * 3) * 0.15);
+        core.scale.setScalar(1 + Math.sin(t * 3) * 0.15 + rs * 0.25);
       };
     },
   },
@@ -114,21 +138,30 @@ const FORMS: DaemonFormDef[] = [
       }
       const core = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), new THREE.MeshStandardMaterial({ color: 0x44aacc, emissive: 0x44aacc, emissiveIntensity: 2, transparent: true, opacity: 0.8 }));
       scene.add(core);
-      return (t) => {
+      return (t, _dt, ctx) => {
+        const rs = ctx?.resonanceStrength ?? 0;
+        const dir = ctx?.nearbyDirection;
+        const ampBoost = 1 + rs * 0.8; // amplitude increases
         for (const rib of ribbons) {
           const pts = rib.positions.length / 3;
           for (let i = 0; i < pts; i++) {
             const f = i / pts, angle = f * Math.PI * 3 + t * 0.8 + rib.phase;
-            const r = rib.radius * (0.7 + Math.sin(t * 0.5 + f * 4 + rib.phase) * 0.3);
-            rib.positions[i * 3] = Math.cos(angle) * r;
-            rib.positions[i * 3 + 1] = Math.sin(f * Math.PI * 2 + t * 0.6 + rib.phase) * 0.4;
-            rib.positions[i * 3 + 2] = Math.sin(angle) * r;
-            const c = new THREE.Color().setHSL(rib.hue + f * 0.1, 0.7, 0.4 + f * 0.2);
+            const r = rib.radius * (0.7 + Math.sin(t * 0.5 + f * 4 + rib.phase) * 0.3 * ampBoost);
+            let px = Math.cos(angle) * r;
+            let py = Math.sin(f * Math.PI * 2 + t * 0.6 + rib.phase) * 0.4 * ampBoost;
+            let pz = Math.sin(angle) * r;
+            // Lean toward neighbor
+            if (rs > 0 && dir) {
+              const lean = rs * 0.15 * f;
+              px += dir.x * lean; pz += dir.z * lean;
+            }
+            rib.positions[i * 3] = px; rib.positions[i * 3 + 1] = py; rib.positions[i * 3 + 2] = pz;
+            const c = new THREE.Color().setHSL(rib.hue + f * 0.1, 0.7, 0.4 + f * 0.2 + rs * 0.15);
             rib.colors[i * 3] = c.r; rib.colors[i * 3 + 1] = c.g; rib.colors[i * 3 + 2] = c.b;
           }
           rib.geo.attributes.position.needsUpdate = true; rib.geo.attributes.color.needsUpdate = true;
         }
-        core.scale.setScalar(1 + Math.sin(t) * 0.1);
+        core.scale.setScalar(1 + Math.sin(t) * 0.1 + rs * 0.15);
       };
     },
   },
@@ -149,12 +182,22 @@ const FORMS: DaemonFormDef[] = [
       }
       const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshStandardMaterial({ color: 0xaabbff, emissive: 0xaabbff, emissiveIntensity: 2, transparent: true, opacity: 0.9 }));
       scene.add(core);
-      return (t) => {
+      return (t, _dt, ctx) => {
+        const rs = ctx?.resonanceStrength ?? 0;
+        const dir = ctx?.nearbyDirection;
         const b = 1 + Math.sin(t * 0.8) * 0.08;
-        shells[0].rotation.set(Math.sin(t * 0.2) * 0.3, t * 0.3, 0); shells[0].scale.setScalar(scales[0] * b);
-        shells[1].rotation.set(0, -t * 0.2, t * 0.15); shells[1].scale.setScalar(scales[1] * b);
-        shells[2].rotation.set(t * 0.25, t * 0.1, 0); shells[2].scale.setScalar(scales[2] * b);
-        core.scale.setScalar(b);
+        const expand = 1 + rs * 0.4; // shells expand
+        const spinBoost = 1 + rs * 1.5; // rotation accelerates
+        shells[0].rotation.set(Math.sin(t * 0.2) * 0.3, t * 0.3 * spinBoost, 0); shells[0].scale.setScalar(scales[0] * b * expand);
+        shells[1].rotation.set(0, -t * 0.2 * spinBoost, t * 0.15 * spinBoost); shells[1].scale.setScalar(scales[1] * b * expand);
+        shells[2].rotation.set(t * 0.25 * spinBoost, t * 0.1 * spinBoost, 0); shells[2].scale.setScalar(scales[2] * b * expand);
+        // Outermost shell pulls toward neighbor
+        if (rs > 0 && dir) {
+          shells[2].position.set(dir.x * rs * 0.15, dir.y * rs * 0.1, dir.z * rs * 0.15);
+        } else {
+          shells[2].position.set(0, 0, 0);
+        }
+        core.scale.setScalar(b + rs * 0.1);
       };
     },
   },
@@ -179,18 +222,26 @@ const FORMS: DaemonFormDef[] = [
         size: 0.025, vertexColors: true, transparent: true, opacity: 0.7,
         blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
       })));
-      return (t) => {
-        const ax = Math.sin(t * 0.4) * 0.35, ay = Math.cos(t * 0.3) * 0.25, az = Math.sin(t * 0.5) * 0.35;
+      return (t, _dt, ctx) => {
+        const rs = ctx?.resonanceStrength ?? 0;
+        const dir = ctx?.nearbyDirection;
+        // Shift attractor toward neighbor
+        let ax = Math.sin(t * 0.4) * 0.35, ay = Math.cos(t * 0.3) * 0.25, az = Math.sin(t * 0.5) * 0.35;
+        if (rs > 0 && dir) {
+          ax += dir.x * rs * 0.3; ay += dir.y * rs * 0.2; az += dir.z * rs * 0.3;
+        }
+        const speedMult = 1 + rs * 1.0; // speed increases
+        const maxSpeed = 0.015 * speedMult;
         for (let i = 0; i < count; i++) {
           const ix = i * 3;
           const dx = ax - positions[ix], dy = ay - positions[ix + 1], dz = az - positions[ix + 2];
-          vels[i].x += dx * 0.0005; vels[i].y += dy * 0.0005; vels[i].z += dz * 0.0005;
+          vels[i].x += dx * 0.0005 * speedMult; vels[i].y += dy * 0.0005 * speedMult; vels[i].z += dz * 0.0005 * speedMult;
           const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
           if (d < 0.15 && d > 0.001) { vels[i].x -= dx / d * 0.001; vels[i].y -= dy / d * 0.001; vels[i].z -= dz / d * 0.001; }
-          const sp = vels[i].length(); if (sp > 0.015) vels[i].multiplyScalar(0.015 / sp);
+          const sp = vels[i].length(); if (sp > maxSpeed) vels[i].multiplyScalar(maxSpeed / sp);
           vels[i].x += -positions[ix + 2] * 0.0003; vels[i].z += positions[ix] * 0.0003;
           positions[ix] += vels[i].x; positions[ix + 1] += vels[i].y; positions[ix + 2] += vels[i].z;
-          const c = new THREE.Color().setHSL(0.3 + Math.sin(t * 0.5 + i * 0.01) * 0.1, 0.6, 0.5);
+          const c = new THREE.Color().setHSL(0.3 + Math.sin(t * 0.5 + i * 0.01) * 0.1, 0.6, 0.5 + rs * 0.2);
           colors[ix] = c.r; colors[ix + 1] = c.g; colors[ix + 2] = c.b;
         }
         geo.attributes.position.needsUpdate = true; geo.attributes.color.needsUpdate = true;
@@ -213,16 +264,25 @@ const FORMS: DaemonFormDef[] = [
       const eyeMat = new THREE.MeshStandardMaterial({ color: 0xccccff, emissive: 0xccccff, emissiveIntensity: 2, transparent: true, opacity: 0.9 });
       const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(-0.08, 0.12, 0.34); scene.add(eyeL);
       const eyeR = new THREE.Mesh(eyeGeo, eyeMat.clone()); eyeR.position.set(0.08, 0.12, 0.34); scene.add(eyeR);
-      return (t) => {
+      return (t, _dt, ctx) => {
+        const rs = ctx?.resonanceStrength ?? 0;
+        const dir = ctx?.nearbyDirection;
+        const billowMult = 1 + rs * 1.5; // billowing intensifies
         const pos = geo.attributes.position.array as Float32Array;
         for (let i = 0; i < pos.length; i += 3) {
-          const w = Math.sin(basePos[i + 1] * 4 + t * 1.5) * 0.04 + Math.sin(basePos[i] * 3 + t * 1.2) * 0.025;
-          pos[i] = basePos[i] + w; pos[i + 1] = basePos[i + 1] + Math.sin(t * 0.8 + basePos[i] * 2) * 0.025; pos[i + 2] = basePos[i + 2] + w * 0.5;
+          const w = (Math.sin(basePos[i + 1] * 4 + t * 1.5) * 0.04 + Math.sin(basePos[i] * 3 + t * 1.2) * 0.025) * billowMult;
+          pos[i] = basePos[i] + w; pos[i + 1] = basePos[i + 1] + Math.sin(t * 0.8 + basePos[i] * 2) * 0.025 * billowMult; pos[i + 2] = basePos[i + 2] + w * 0.5;
         }
         geo.attributes.position.needsUpdate = true;
         wire.geometry.attributes.position.array.set(pos); wire.geometry.attributes.position.needsUpdate = true;
+        // Opacity increases with resonance
+        (mesh.material as THREE.MeshStandardMaterial).opacity = 0.3 + rs * 0.3;
         mesh.rotation.y = Math.sin(t * 0.3) * 0.1; wire.rotation.y = mesh.rotation.y;
-        const gx = Math.sin(t * 0.4) * 0.025, gy = Math.cos(t * 0.3) * 0.015;
+        // Eyes look toward neighbor
+        let gx = Math.sin(t * 0.4) * 0.025, gy = Math.cos(t * 0.3) * 0.015;
+        if (rs > 0 && dir) {
+          gx += dir.x * rs * 0.05; gy += dir.y * rs * 0.03;
+        }
         eyeL.position.set(-0.08 + gx, 0.12 + gy, 0.34); eyeR.position.set(0.08 + gx, 0.12 + gy, 0.34);
         const blink = Math.sin(t * 0.7); eyeL.scale.y = blink > 0.95 ? 0.1 : 1; eyeR.scale.y = blink > 0.95 ? 0.1 : 1;
       };
@@ -243,15 +303,25 @@ const FORMS: DaemonFormDef[] = [
       }
       const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 10), new THREE.MeshStandardMaterial({ color: 0xff66aa, emissive: 0xff66aa, emissiveIntensity: 2, transparent: true, opacity: 0.9 }));
       scene.add(core);
-      return (t) => {
+      return (t, _dt, ctx) => {
+        const rs = ctx?.resonanceStrength ?? 0;
+        const dir = ctx?.nearbyDirection;
+        const emitSpeed = 0.5 + rs * 0.5; // ring emission rate doubles at full resonance
         for (const ring of rings) {
-          const life = ((t * 0.5 + ring.phase) % 2) / 2;
-          const s = 1 + life * 7; ring.mesh.scale.set(s, s, 1); ring.mat.opacity = (1 - life) * 0.5;
+          const life = ((t * emitSpeed + ring.phase) % 2) / 2;
+          const s = 1 + life * 7; ring.mesh.scale.set(s, s, 1); ring.mat.opacity = (1 - life) * (0.5 + rs * 0.3);
           ring.mesh.position.y = Math.sin(t * 0.5) * 0.08;
-          ring.mesh.rotation.x = Math.PI / 2 + Math.sin(t * 0.3) * 0.15;
+          // Rings tilt toward neighbor
+          let tiltX = Math.PI / 2 + Math.sin(t * 0.3) * 0.15;
+          let tiltZ = 0;
+          if (rs > 0 && dir) {
+            tiltX += dir.z * rs * 0.3;
+            tiltZ += dir.x * rs * 0.3;
+          }
+          ring.mesh.rotation.x = tiltX; ring.mesh.rotation.z = tiltZ;
         }
         const beat = Math.pow(Math.max(0, Math.sin(t * 3)), 8);
-        core.scale.setScalar(1 + beat * 0.4);
+        core.scale.setScalar(1 + beat * 0.4 + rs * 0.2);
       };
     },
   },
@@ -275,18 +345,28 @@ const FORMS: DaemonFormDef[] = [
       scene.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0xaa8844, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending })));
       const core = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), new THREE.MeshStandardMaterial({ color: 0xddaa44, emissive: 0xddaa44, emissiveIntensity: 2, transparent: true, opacity: 0.9 }));
       scene.add(core);
-      return (t) => {
+      return (t, _dt, ctx) => {
+        const rs = ctx?.resonanceStrength ?? 0;
+        const dir = ctx?.nearbyDirection;
+        const orbitWiden = 1 + rs * 0.5; // orbits widen
         for (let i = 0; i < glyphs.length; i++) {
           const g = glyphs[i], angle = t * g.speed + g.phase;
-          g.mesh.position.set(Math.cos(angle) * g.orbit, Math.sin(angle * 0.7 + g.tilt) * 0.25, Math.sin(angle) * g.orbit);
+          const orbit = g.orbit * orbitWiden;
+          g.mesh.position.set(Math.cos(angle) * orbit, Math.sin(angle * 0.7 + g.tilt) * 0.25, Math.sin(angle) * orbit);
           g.mesh.rotation.set(0, t * 0.5, t * 0.3 + i);
-          (g.mesh.material as THREE.MeshBasicMaterial).opacity = 0.4 + Math.sin(t * 1.5 + i) * 0.3;
+          // Nearest glyphs glow brighter when resonating
+          let glowBoost = 0;
+          if (rs > 0 && dir) {
+            const dot = g.mesh.position.x * dir.x + g.mesh.position.z * dir.z;
+            glowBoost = Math.max(0, dot) * rs * 0.4;
+          }
+          (g.mesh.material as THREE.MeshBasicMaterial).opacity = 0.4 + Math.sin(t * 1.5 + i) * 0.3 + glowBoost;
           const ni = (i + 1) % glyphs.length;
           linePos[i * 6] = g.mesh.position.x; linePos[i * 6 + 1] = g.mesh.position.y; linePos[i * 6 + 2] = g.mesh.position.z;
           linePos[i * 6 + 3] = glyphs[ni].mesh.position.x; linePos[i * 6 + 4] = glyphs[ni].mesh.position.y; linePos[i * 6 + 5] = glyphs[ni].mesh.position.z;
         }
         lineGeo.attributes.position.needsUpdate = true;
-        core.scale.setScalar(1 + Math.sin(t * 0.9) * 0.1);
+        core.scale.setScalar(1 + Math.sin(t * 0.9) * 0.1 + rs * 0.15);
       };
     },
   },

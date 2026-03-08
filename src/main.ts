@@ -11,6 +11,10 @@ import { SocialState, TopicId } from './types';
 import { showConfigUI } from './config-ui';
 import { MSFBridge } from './msf-bridge';
 import { GLTFExporter } from 'three-stdlib';
+import { InteractionFXSystem } from './interaction-fx';
+import { ToneReactor } from './tone-reactor';
+import { ThoughtBubbleSystem } from './thought-bubble';
+import { ChatUI } from './chat-ui';
 
 // --- Setup ---
 const { scene, camera, renderer } = createScene();
@@ -28,6 +32,10 @@ const controls = new PlayerControls(camera, renderer.domElement);
 // Systems
 const resonanceSystem = new ResonanceSystem(scene);
 const peerManager = new PeerManager(scene);
+const interactionFX = new InteractionFXSystem(scene);
+const toneReactor = new ToneReactor(playerDaemon);
+const thoughtBubbles = new ThoughtBubbleSystem(scene, playerDaemon.group);
+const _chatUI = new ChatUI(toneReactor, thoughtBubbles);
 
 // Player state
 let playerTopics: TopicId[] = [];
@@ -203,7 +211,14 @@ function animate() {
   ];
 
   // Update resonance
-  resonanceSystem.update(entries, time);
+  const links = resonanceSystem.update(entries, time);
+
+  // Midpoint interaction particles
+  interactionFX.update(entries, links, time);
+
+  // Tone reactor + thought bubbles
+  toneReactor.update(dt);
+  thoughtBubbles.update(dt);
 
   // Render
   renderer.render(scene, camera);

@@ -30,7 +30,8 @@
       "mcp__manifolder__find_objects",
       "Bash(ls:*)",
       "Bash(scp:*)",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

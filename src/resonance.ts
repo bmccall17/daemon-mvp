@@ -58,6 +58,8 @@ export class ResonanceSystem {
     // Reset all resonance
     for (const entry of entries) {
       entry.daemon.resonanceStrength = 0;
+      entry.daemon.nearbyDirection = null;
+      entry.daemon.nearbyDistance = Infinity;
     }
 
     // Pairwise comparison
@@ -92,6 +94,16 @@ export class ResonanceSystem {
         // Apply resonance to daemons
         a.daemon.resonanceStrength = Math.max(a.daemon.resonanceStrength, strength);
         b.daemon.resonanceStrength = Math.max(b.daemon.resonanceStrength, strength);
+
+        // Track nearest resonating neighbor direction
+        if (dist < a.daemon.nearbyDistance) {
+          a.daemon.nearbyDistance = dist;
+          a.daemon.nearbyDirection = new THREE.Vector3().subVectors(b.position, a.position).normalize();
+        }
+        if (dist < b.daemon.nearbyDistance) {
+          b.daemon.nearbyDistance = dist;
+          b.daemon.nearbyDirection = new THREE.Vector3().subVectors(a.position, b.position).normalize();
+        }
 
         // Blend resonance color
         const resColor = new THREE.Color(0.5, 0.8, 1.0);
