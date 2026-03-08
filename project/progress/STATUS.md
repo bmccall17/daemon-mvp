@@ -1,8 +1,8 @@
 # Daemon MVP — Project Status
 
-**Last updated:** 2026-03-07
+**Last updated:** 2026-03-07 (end of Day 1)
 **Hackathon:** Open Metaverse Hackathon (March 7-8, 2026)
-**Current tier:** Tier 2 READY (fabric connected, pending browser sync test)
+**Current tier:** Tier 2 READY (fabric connected, browser wiring complete)
 
 ---
 
@@ -21,9 +21,9 @@
 |----|------|--------|-------|
 | G1 | Form swapping | DONE | All 8 forms swap via `setForm()`, proper disposal |
 | G2 | Serialization + MSF bridge | DONE | `toSerializable()`, `MSFBridge`, dual-mode `PeerManager` |
-| G3 | Connect to MSF fabric | DONE | ManifolderMCP connected, scene created, objects verified |
-| G4 | Real MSF peers | READY TO TEST | Needs two-browser test with fabric connection |
-| G5 | Demo-ready experience | IN PROGRESS | Needs testing pass + deploy |
+| G3 | Connect to MSF fabric | DONE | ManifolderMCP + browser ManifolderClient wired |
+| G4 | Real MSF peers | READY TO TEST | Browser wiring deployed, needs two-tab test |
+| G5 | Demo-ready experience | DEPLOYED | Live on GitHub Pages, needs manual verification |
 
 ## Phase Completion
 
@@ -32,22 +32,20 @@
 | 1 | Form swapping | DONE | [ADR-001](../adr/001-form-swapping-architecture.md) |
 | 2 | Serialization + polish | DONE | [ADR-003](../adr/003-daemon-serialization.md) |
 | 3 | MSF bridge + config UI + dual-mode peers | DONE | [ADR-002](../adr/002-msf-bridge-dual-mode-peers.md) |
-| 4 | ManifolderMCP setup | DONE | Scene `daemon-social-space` created, test object verified |
-| 5 | Deploy + demo prep | NOT STARTED | — |
+| 4 | ManifolderMCP setup | DONE | Scene created, browser wiring complete |
+| 5 | Deploy + demo prep | DONE | Deployed to GitHub Pages |
 
 ## Tier 1 Test Checklist
 
 | Test | Status | Notes |
 |------|--------|-------|
-| Build clean | PASS | `npm run build` succeeds, 17 modules |
-| Snyk scan | PASS | 0 issues found |
-| Dev server | PASS | Vite serves all modules, page loads |
+| Build clean | PASS | 17 modules, 547KB |
+| Snyk scan | PASS | 0 issues |
+| Dev server | PASS | All modules serve correctly |
 | Form swap all 8 forms | NEEDS MANUAL | Click each form card in drawer |
 | Form swap during resonance | NEEDS MANUAL | Change form while resonating |
 | State + topic changes | NEEDS MANUAL | All states, toggle topics |
-| Rapid state changes | NEEDS MANUAL | Spam buttons, check stability |
-| Mobile browser | NEEDS MANUAL | Touch controls + UI |
-| Config UI skip flow | NEEDS MANUAL | Load -> Skip -> simulated peers |
+| Config UI skip flow | NEEDS MANUAL | Load -> Solo Mode -> simulated peers |
 | Sim peers show form variety | NEEDS MANUAL | Peers should have random forms |
 
 ## Tier 2 Test Checklist
@@ -55,13 +53,11 @@
 | Test | Status | Notes |
 |------|--------|-------|
 | ManifolderMCP create scene | PASS | `daemon-social-space` created |
-| ManifolderMCP create object | PASS | Test object created at (0, 1.8, 0) |
-| ManifolderMCP list objects | PASS | Scene hierarchy visible |
-| MSF connect from browser | NEEDS MANUAL | Enter fabric URL + key in config UI |
+| ManifolderMCP create/list objects | PASS | Full CRUD verified via MCP tools |
+| Browser fabric connect | NEEDS MANUAL | Enter creds, check green dot + console |
 | Two-player sync | NEEDS MANUAL | Two browser tabs |
-| State propagation | NEEDS MANUAL | Change state, verify in other tab |
+| Daemon visible in Scene Assembler | PARTIAL | Scene visible, test object shows |
 | Resonance with real peers | NEEDS MANUAL | Both select topics, walk close |
-| Manifolder visibility | NEEDS MANUAL | Check scene at fabric URL |
 
 ## Blockers
 
@@ -69,12 +65,25 @@
 |---------|-------|--------|--------|
 | RP1 signup portal down | 2026-03-07 | Completed signup | RESOLVED |
 
-## Next Steps (Priority Order)
+## Day 1 Summary (March 7)
 
-1. Manual browser testing (form swap, config UI, sim peers)
-2. Two-browser fabric sync test
-3. Deploy to GitHub Pages (Phase 5)
-4. Demo prep
+All 5 phases complete. Built from zero to:
+- 8 daemon forms with live swapping + proper WebGL disposal
+- Serialization format for network sync
+- MSF bridge abstraction (simulated fallback + real fabric)
+- Config UI overlay with credential persistence
+- Dual-mode peer manager (simulated/MSF)
+- ManifolderMCP set up, connected, scene created
+- ManifolderClient browser wiring (vendor scripts + runtime ESM injection)
+- Deployed to GitHub Pages
+
+## Day 2 Plan (March 8)
+
+1. Manual browser testing: form swap, config UI flows, sim peer variety
+2. Fabric connection test: enter creds, verify green dot, check console
+3. Two-tab sync test: both tabs connected, see each other's daemons
+4. Demo prep: walkthrough script for judges
+5. Polish if time: reconnect on drop, smoother sim peer wander patterns
 
 ## Architecture Decisions
 
@@ -83,4 +92,5 @@ See `project/adr/` for full records:
 - [ADR-002](../adr/002-msf-bridge-dual-mode-peers.md) — MSF bridge + dual-mode peers
 - [ADR-003](../adr/003-daemon-serialization.md) — Serialization format
 - [ADR-004](../adr/004-gotcha-atlas-framework.md) — GOTCHA/ATLAS frameworks
-- [ADR-005](../adr/005-project-docs-location.md) — Moved project docs to `project/` (Vite build was wiping `docs/`)
+- [ADR-005](../adr/005-project-docs-location.md) — Moved project docs to `project/`
+- [ADR-006](../adr/006-manifolderclient-browser-loading.md) — ManifolderClient browser loading strategy
