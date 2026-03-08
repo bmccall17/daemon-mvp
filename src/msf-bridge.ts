@@ -111,6 +111,14 @@ export class MSFBridge {
     this.lastPublishTime = now;
 
     try {
+      const objName = `daemon:${state.displayName.slice(0, 30)}`;
+      const payload = JSON.stringify({
+        formId: state.formId,
+        socialState: state.socialState,
+        topics: state.topics,
+        ts: now,
+      });
+
       if (this.playerObjectId) {
         // Using github pages raw URL since that's where the MVP is deployed
         const modelUrl = `https://bmccall17.github.io/daemon-mvp/models/${state.formId}.glb`;
@@ -119,9 +127,10 @@ export class MSFBridge {
         await this.client.updateObject({
           scopeId: this.scopeId,
           objectId: this.playerObjectId,
-          name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${now}:${JSON.stringify(state.topics)}`,
+          name: objName,
           position: state.position,
           resourceReference: modelUrl,
+          properties: { statePayload: payload },
         });
       } else {
         // Using github pages raw URL since that's where the MVP is deployed
@@ -131,9 +140,10 @@ export class MSFBridge {
         const obj = await this.client.createObject({
           scopeId: this.scopeId,
           parentId: this.sceneRootId,
-          name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${now}:${JSON.stringify(state.topics)}`,
+          name: objName,
           position: state.position,
           resourceReference: modelUrl,
+          properties: { statePayload: payload },
         });
         this.playerObjectId = obj.id;
         console.log('[MSF Bridge] Created player object:', this.playerObjectId);
@@ -164,23 +174,41 @@ export class MSFBridge {
         // Only daemon objects (name starts with "daemon:")
         if (!obj.name?.startsWith('daemon:')) continue;
 
-        // Parse state from name: "daemon:DisplayName:formId:socialState:timestamp:topicsJSON"
-        const parts = obj.name.split(':');
-        // Legacy check / old ghost objects
-        if (parts.length < 6) continue;
+        let displayName = 'Unknown';
+        let formId = 'wisp';
+        let socialState = SocialState.OPEN as SocialState;
+        let topics: TopicId[] = [];
+        let timestamp = 0;
 
-        const displayName = parts[1];
-        const formId = parts[2];
-        const socialState = parts[3] as SocialState;
-        const timestamp = parseInt(parts[4], 10);
+        // Extract state from properties or fallback to legacy name parsing
+        if (obj.properties?.statePayload) {
+          try {
+            const parsed = JSON.parse(obj.properties.statePayload);
+            formId = parsed.formId || 'wisp';
+            socialState = parsed.socialState || SocialState.OPEN;
+            topics = parsed.topics || [];
+            timestamp = parsed.ts || 0;
+            displayName = obj.name.substring(7); // "daemon:DisplayName"
+          } catch (e) {
+            console.warn('[MSF Bridge] Failed to parse peer statePayload:', e);
+          }
+        } else {
+          // Legacy check
+          const parts = obj.name.split(':');
+          if (parts.length >= 6) {
+            displayName = parts[1];
+            formId = parts[2];
+            socialState = parts[3] as SocialState;
+            timestamp = parseInt(parts[4], 10);
+            try { topics = JSON.parse(parts.slice(5).join(':')); } catch { }
+          } else {
+            continue; // Not a valid daemon state object
+          }
+        }
 
         // Ignore ghost objects older than timeout (or invalid timestamps)
         const now = Date.now();
-        if (isNaN(timestamp) || now - timestamp > 10000) continue;
-
-        const topics = (() => {
-          try { return JSON.parse(parts.slice(5).join(':')); } catch { return []; }
-        })();
+        if (isNaN(timestamp) || now - timestamp > 10000 || timestamp <= 0) continue;
 
         const pos = obj.position || obj.transform?.position || { x: 0, y: 0, z: 0 };
 
