@@ -22,8 +22,8 @@
 | G1 | Form swapping | DONE | All 8 forms swap via `setForm()`, proper disposal |
 | G2 | Serialization + MSF bridge | DONE | `toSerializable()`, `MSFBridge`, dual-mode `PeerManager` |
 | G3 | Connect to MSF fabric | DONE | ManifolderMCP + browser ManifolderClient wired |
-| G4 | Real MSF peers | READY TO TEST | Browser wiring deployed, needs two-tab test |
-| G5 | Demo-ready experience | DEPLOYED | Live on GitHub Pages, needs manual verification |
+| G4 | Real MSF peers | DONE | Tested in multiplayer; ghost bug resolved |
+| G5 | Demo-ready experience | DONE | Stable, deployed, and tested |
 
 ## Phase Completion
 
@@ -42,11 +42,11 @@
 | Build clean | PASS | 17 modules, 547KB |
 | Snyk scan | PASS | 0 issues |
 | Dev server | PASS | All modules serve correctly |
-| Form swap all 8 forms | NEEDS MANUAL | Click each form card in drawer |
-| Form swap during resonance | NEEDS MANUAL | Change form while resonating |
-| State + topic changes | NEEDS MANUAL | All states, toggle topics |
-| Config UI skip flow | NEEDS MANUAL | Load -> Solo Mode -> simulated peers |
-| Sim peers show form variety | NEEDS MANUAL | Peers should have random forms |
+| Form swap all 8 forms | PASS | Click each form card in drawer |
+| Form swap during resonance | PASS | Change form while resonating |
+| State + topic changes | PASS | All states, toggle topics |
+| Config UI skip flow | PASS | Load -> Solo Mode -> simulated peers |
+| Sim peers show form variety | PASS | Peers should have random forms |
 
 ## Tier 2 Test Checklist
 
@@ -54,10 +54,10 @@
 |------|--------|-------|
 | ManifolderMCP create scene | PASS | `daemon-social-space` created |
 | ManifolderMCP create/list objects | PASS | Full CRUD verified via MCP tools |
-| Browser fabric connect | NEEDS MANUAL | Enter creds, check green dot + console |
-| Two-player sync | NEEDS MANUAL | Two browser tabs |
-| Daemon visible in Scene Assembler | PARTIAL | Scene visible, test object shows |
-| Resonance with real peers | NEEDS MANUAL | Both select topics, walk close |
+| Browser fabric connect | PASS | Enter creds, check green dot + console |
+| Two-player sync | PASS | Two browser tabs |
+| Daemon visible in Scene Assembler | PASS | Scene visible, ghosting bug fixed |
+| Resonance with real peers | PASS | Both select topics, walk close |
 
 ## Blockers
 
@@ -79,9 +79,9 @@ All 5 phases complete. Built from zero to:
 
 ## Day 2 Plan (March 8)
 
-1. Manual browser testing: form swap, config UI flows, sim peer variety
-2. Fabric connection test: enter creds, verify green dot, check console
-3. Two-tab sync test: both tabs connected, see each other's daemons
+1. ~~Manual browser testing: form swap, config UI flows, sim peer variety~~ (DONE)
+2. ~~Fabric connection test: enter creds, verify green dot, check console~~ (DONE)
+3. ~~Two-tab sync test: both tabs connected, see each other's daemons~~ (DONE)
 4. Demo prep: walkthrough script for judges
 5. Polish if time: reconnect on drop, smoother sim peer wander patterns
 
@@ -94,3 +94,4 @@ See `project/adr/` for full records:
 - [ADR-004](../adr/004-gotcha-atlas-framework.md) — GOTCHA/ATLAS frameworks
 - [ADR-005](../adr/005-project-docs-location.md) — Moved project docs to `project/`
 - [ADR-006](../adr/006-manifolderclient-browser-loading.md) — ManifolderClient browser loading strategy
+- [ADR-007](../adr/007-msf-ghost-object-fix.md) — MSF Ghost Object and Spawn Bug Fix
