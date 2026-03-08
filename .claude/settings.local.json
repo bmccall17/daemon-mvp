@@ -24,7 +24,11 @@
       "mcp__manifolder__create_object",
       "mcp__manifolder__list_objects",
       "Bash(mkdir:*)",
-      "Bash(xargs ls:*)"
+      "Bash(xargs ls:*)",
+      "mcp__manifolder__get_object",
+      "mcp__manifolder__list_resources",
+      "mcp__manifolder__find_objects",
+      "Bash(ls:*)"
     ]
   }
 }

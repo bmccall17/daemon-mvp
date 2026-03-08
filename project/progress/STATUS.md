@@ -99,3 +99,4 @@ See `project/adr/` for full records:
 - [ADR-005](../adr/005-project-docs-location.md) — Moved project docs to `project/`
 - [ADR-006](../adr/006-manifolderclient-browser-loading.md) — ManifolderClient browser loading strategy
 - [ADR-007](../adr/007-msf-ghost-object-fix.md) — MSF Ghost Object and Spawn Bug Fix
+- [ADR-008](../adr/008-rp1-viewer-handoff.md) — Handoff to Claude Code CLI for RP1 Viewer Blocker
