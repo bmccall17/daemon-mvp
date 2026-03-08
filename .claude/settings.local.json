@@ -22,7 +22,8 @@
       "mcp__manifolder__list_scenes",
       "mcp__manifolder__open_scene",
       "mcp__manifolder__create_object",
-      "mcp__manifolder__list_objects"
+      "mcp__manifolder__list_objects",
+      "Bash(mkdir:*)"
     ]
   }
 }

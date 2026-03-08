@@ -2,17 +2,18 @@ import { MSFConfig, PeerState, SocialState, TopicId } from './types';
 import { FormId } from './form-selector';
 
 /**
- * MSF Bridge - abstraction layer for connecting daemon to the MSF spatial fabric.
- * When fabric credentials are available, this connects via ManifolderClient.
- * Until then, all methods gracefully no-op or return empty results.
+ * MSF Bridge - connects daemon to the MSF spatial fabric via ManifolderClient.
+ * Vendor MVMF scripts must be loaded in index.html before this runs.
+ * Uses createManifolderPromiseClient() from the ManifolderClient ESM module.
  */
 export class MSFBridge {
   private config: MSFConfig;
   private client: any = null;
+  private scopeId: string | null = null;
+  private sceneRootId: string | null = null;
   private playerObjectId: string | null = null;
   private connected = false;
   private lastPublishTime = 0;
-  private lastStatePublishTime = 0;
 
   constructor(config: MSFConfig) {
     this.config = config;
@@ -20,30 +21,42 @@ export class MSFBridge {
 
   async connect(): Promise<boolean> {
     try {
-      // ManifolderClient will be loaded via dynamic script tag
-      const ManifolderClient = (window as any).ManifolderClient;
-      if (!ManifolderClient) {
-        console.warn('[MSF Bridge] ManifolderClient not available. Load the vendor script first.');
-        return false;
-      }
+      // Import ManifolderClient ESM (vendor scripts already loaded via index.html)
+      const baseUrl = import.meta.url.substring(0, import.meta.url.lastIndexOf('/'));
+      const mod = await import(/* @vite-ignore */ `${baseUrl}/../vendor/ManifolderClient.js`);
+      this.client = mod.createManifolderPromiseClient();
 
-      this.client = new ManifolderClient({
+      console.log('[MSF Bridge] Connecting to', this.config.fabricUrl);
+
+      // Connect to fabric
+      const result = await this.client.connectRoot({
         fabricUrl: this.config.fabricUrl,
         adminKey: this.config.adminKey,
+        timeoutMs: 15000,
       });
+      this.scopeId = result.scopeId;
+      console.log('[MSF Bridge] Connected, scopeId:', this.scopeId);
 
-      await this.client.connectRoot();
-
-      // Open or create the daemon scene
-      const scenes = await this.client.listScenes();
+      // List scenes, find or create daemon scene
+      const scenes = await this.client.listScenes({ scopeId: this.scopeId });
       let scene = scenes.find((s: any) => s.name === this.config.sceneId);
       if (!scene) {
-        scene = await this.client.createScene({ name: this.config.sceneId });
+        scene = await this.client.createScene({
+          scopeId: this.scopeId,
+          name: this.config.sceneId,
+        });
+        console.log('[MSF Bridge] Created scene:', scene.name);
       }
-      await this.client.openScene(scene.id);
+
+      // Open the scene
+      const opened = await this.client.openScene({
+        scopeId: this.scopeId,
+        sceneId: scene.id,
+      });
+      this.sceneRootId = opened.id;
+      console.log('[MSF Bridge] Opened scene:', scene.name, 'root:', this.sceneRootId);
 
       this.connected = true;
-      console.log('[MSF Bridge] Connected to fabric:', this.config.fabricUrl);
       return true;
     } catch (err) {
       console.error('[MSF Bridge] Connection failed:', err);
@@ -62,34 +75,32 @@ export class MSFBridge {
     position: { x: number; y: number; z: number };
     displayName: string;
   }): Promise<void> {
-    if (!this.connected || !this.client) return;
+    if (!this.connected || !this.client || !this.scopeId || !this.sceneRootId) return;
 
     const now = Date.now();
     const positionInterval = 1000 / this.config.syncRates.positionHz;
-    const stateInterval = 1000 / this.config.syncRates.stateHz;
-
-    // Throttle position updates
     if (now - this.lastPublishTime < positionInterval) return;
     this.lastPublishTime = now;
 
     try {
-      const props = {
-        displayName: state.displayName,
-        formId: state.formId,
-        socialState: state.socialState,
-        topics: JSON.stringify(state.topics),
-        posX: state.position.x,
-        posY: state.position.y,
-        posZ: state.position.z,
-        lastUpdate: now,
-        objectType: 'daemon-avatar',
-      };
-
       if (this.playerObjectId) {
-        await this.client.updateObject(this.playerObjectId, props);
+        // Update existing object position
+        await this.client.updateObject({
+          scopeId: this.scopeId,
+          objectId: this.playerObjectId,
+          name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${JSON.stringify(state.topics)}`,
+          position: state.position,
+        });
       } else {
-        const obj = await this.client.createObject(props);
-        this.playerObjectId = obj.objectId;
+        // Create player object in scene
+        const obj = await this.client.createObject({
+          scopeId: this.scopeId,
+          parentId: this.sceneRootId,
+          name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${JSON.stringify(state.topics)}`,
+          position: state.position,
+        });
+        this.playerObjectId = obj.id;
+        console.log('[MSF Bridge] Created player object:', this.playerObjectId);
       }
     } catch (err) {
       console.error('[MSF Bridge] Publish failed:', err);
@@ -97,30 +108,45 @@ export class MSFBridge {
   }
 
   async fetchPeers(): Promise<PeerState[]> {
-    if (!this.connected || !this.client) return [];
+    if (!this.connected || !this.client || !this.scopeId || !this.sceneRootId) return [];
 
     try {
-      const objects = await this.client.listObjects();
+      const objects = await this.client.listObjects({
+        scopeId: this.scopeId,
+        anchorObjectId: this.sceneRootId,
+      });
+
       const peers: PeerState[] = [];
 
       for (const obj of objects) {
+        // Skip scene root
+        if (obj.id === this.sceneRootId) continue;
         // Skip our own object
-        if (obj.objectId === this.playerObjectId) continue;
-        // Only daemon-avatar objects
-        if (obj.objectType !== 'daemon-avatar') continue;
+        if (obj.id === this.playerObjectId) continue;
+        // Only daemon objects (name starts with "daemon:")
+        if (!obj.name?.startsWith('daemon:')) continue;
 
+        // Parse state from name: "daemon:DisplayName:formId:socialState:topicsJSON"
+        const parts = obj.name.split(':');
+        if (parts.length < 5) continue;
+
+        const displayName = parts[1];
+        const formId = parts[2];
+        const socialState = parts[3] as SocialState;
         const topics = (() => {
-          try { return JSON.parse(obj.topics || '[]'); } catch { return []; }
+          try { return JSON.parse(parts.slice(4).join(':')); } catch { return []; }
         })();
 
+        const pos = obj.position || obj.transform?.position || { x: 0, y: 0, z: 0 };
+
         peers.push({
-          id: obj.objectId,
-          position: { x: obj.posX || 0, y: obj.posY || 0, z: obj.posZ || 0 } as any,
-          socialState: obj.socialState || SocialState.OPEN,
+          id: obj.id,
+          position: pos as any,
+          socialState: socialState || SocialState.OPEN,
           topics,
-          displayName: obj.displayName || 'Unknown',
-          formId: obj.formId,
-          lastUpdate: obj.lastUpdate,
+          displayName: displayName || 'Unknown',
+          formId,
+          lastUpdate: Date.now(),
         });
       }
 
@@ -132,15 +158,19 @@ export class MSFBridge {
   }
 
   disconnect(): void {
-    if (this.client && this.connected) {
-      // Remove our object before disconnecting
+    if (this.client && this.connected && this.scopeId) {
       if (this.playerObjectId) {
-        this.client.deleteObject(this.playerObjectId).catch(() => {});
+        this.client.deleteObject({
+          scopeId: this.scopeId,
+          objectId: this.playerObjectId,
+        }).catch(() => {});
       }
-      this.client.disconnect?.();
+      this.client.closeScope({ scopeId: this.scopeId }).catch(() => {});
     }
     this.connected = false;
     this.client = null;
+    this.scopeId = null;
+    this.sceneRootId = null;
     this.playerObjectId = null;
     console.log('[MSF Bridge] Disconnected');
   }
