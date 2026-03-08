@@ -21,11 +21,30 @@ export class MSFBridge {
 
   async connect(): Promise<boolean> {
     try {
-      // Import ManifolderClient ESM (vendor MVMF scripts already loaded via index.html)
-      // Use document.baseURI to resolve relative to the page, not the bundled JS
-      const base = document.baseURI.replace(/\/$/, '');
-      const mod = await import(/* @vite-ignore */ `${base}/vendor/ManifolderClient.js`);
-      this.client = mod.createManifolderPromiseClient();
+      // Dynamically load ManifolderClient ESM (vendor MVMF globals already loaded via index.html)
+      if (!(window as any).__createManifolderPromiseClient) {
+        const base = document.querySelector('base')?.href || window.location.href.replace(/[^/]*$/, '');
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.textContent = `
+            import { createManifolderPromiseClient } from '${base}vendor/ManifolderClient.js';
+            window.__createManifolderPromiseClient = createManifolderPromiseClient;
+            window.dispatchEvent(new Event('manifolder-ready'));
+          `;
+          window.addEventListener('manifolder-ready', () => resolve(), { once: true });
+          script.onerror = reject;
+          document.head.appendChild(script);
+          // Timeout fallback
+          setTimeout(() => reject(new Error('ManifolderClient load timeout')), 5000);
+        });
+      }
+      const factory = (window as any).__createManifolderPromiseClient;
+      if (!factory) {
+        console.error('[MSF Bridge] ManifolderClient failed to initialize.');
+        return false;
+      }
+      this.client = factory();
 
       console.log('[MSF Bridge] Connecting to', this.config.fabricUrl);
 
