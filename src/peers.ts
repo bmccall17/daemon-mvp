@@ -80,6 +80,8 @@ export class PeerManager {
       const peerTopics = shuffled.slice(0, numTopics) as TopicId[];
       daemon.setTopics(peerTopics);
 
+      avatar.setNameLabel(`Explorer ${i + 1}`, false);
+
       this.scene.add(avatar.group);
       this.scene.add(daemon.group);
 
@@ -161,6 +163,7 @@ export class PeerManager {
           let msfPeer = this.msfPeers.get(state.id);
           if (!msfPeer) {
             const avatar = new Avatar(PEER_COLORS[this.msfPeers.size % PEER_COLORS.length]);
+            avatar.setNameLabel(state.displayName || 'Player', true);
             const daemon = new Daemon();
             if (state.formId) daemon.setForm(state.formId as FormId);
             this.scene.add(avatar.group);

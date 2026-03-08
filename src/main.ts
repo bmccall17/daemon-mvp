@@ -22,6 +22,7 @@ const clock = new THREE.Clock();
 
 // Player
 const playerAvatar = new Avatar(0x99aabb);
+playerAvatar.setNameLabel('You', true);
 scene.add(playerAvatar.group);
 
 const playerDaemon = new Daemon();
