@@ -4,3 +4,6 @@ dist
 *.local
 secrets/
 # docs/ is intentionally tracked -- it's the GitHub Pages build output
+
+# Editor / Agent configurations
+.agents/

@@ -112,20 +112,28 @@ export class MSFBridge {
 
     try {
       if (this.playerObjectId) {
-        // Update existing object position
+        // Using github pages raw URL since that's where the MVP is deployed
+        const modelUrl = `https://bmccall17.github.io/daemon-mvp/models/${state.formId}.glb`;
+
+        // Update existing object position and model
         await this.client.updateObject({
           scopeId: this.scopeId,
           objectId: this.playerObjectId,
           name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${now}:${JSON.stringify(state.topics)}`,
           position: state.position,
+          resourceReference: modelUrl,
         });
       } else {
+        // Using github pages raw URL since that's where the MVP is deployed
+        const modelUrl = `https://bmccall17.github.io/daemon-mvp/models/${state.formId}.glb`;
+
         // Create player object in scene
         const obj = await this.client.createObject({
           scopeId: this.scopeId,
           parentId: this.sceneRootId,
           name: `daemon:${state.displayName}:${state.formId}:${state.socialState}:${now}:${JSON.stringify(state.topics)}`,
           position: state.position,
+          resourceReference: modelUrl,
         });
         this.playerObjectId = obj.id;
         console.log('[MSF Bridge] Created player object:', this.playerObjectId);

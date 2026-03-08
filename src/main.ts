@@ -10,6 +10,7 @@ import { initFormSelector, FormId } from './form-selector';
 import { SocialState, TopicId } from './types';
 import { showConfigUI } from './config-ui';
 import { MSFBridge } from './msf-bridge';
+import { GLTFExporter } from 'three-stdlib';
 
 // --- Setup ---
 const { scene, camera, renderer } = createScene();
@@ -70,6 +71,68 @@ initUI(
 initFormSelector((formId: FormId) => {
   playerDaemon.setForm(formId);
 });
+
+// --- Exporter Utility ---
+(window as any).exportAllFormsToGLB = async () => {
+  console.log('Starting export of all daemon forms...');
+  const exporter = new GLTFExporter();
+  const forms: FormId[] = ['wisp', 'ember', 'tide', 'lattice', 'murmur', 'phantom', 'pulse', 'sigil'];
+
+  // Create a clean scene for exporting
+  const exportScene = new THREE.Scene();
+  const exportDaemon = new Daemon();
+  exportScene.add(exportDaemon.group);
+
+  // Move it to origin so it's centered in the GLB
+  exportDaemon.group.position.set(0, 0, 0);
+
+  for (const formId of forms) {
+    console.log(`Exporting ${formId}...`);
+    exportDaemon.setForm(formId);
+
+    // Run update a few times to spread things out and establish the form
+    for (let i = 0; i < 60; i++) {
+      exportDaemon.update(0.016);
+    }
+
+    // Tell exporter to preserve point/line/mesh structure
+    const options = {
+      trs: false,
+      onlyVisible: true,
+      binary: true,
+      maxTextureSize: 1024
+    };
+
+    try {
+      const gltb: ArrayBuffer = await new Promise((resolve, reject) => {
+        exporter.parse(
+          exportScene,
+          (gltf) => resolve(gltf as ArrayBuffer),
+          (error) => reject(error),
+          options
+        );
+      });
+
+      // trigger download
+      const blob = new Blob([gltb], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = url;
+      link.download = `${formId}.glb`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // small delay between downloads
+      await new Promise(r => setTimeout(r, 500));
+    } catch (e) {
+      console.error(`Error exporting ${formId}:`, e);
+    }
+  }
+  console.log('Export complete.');
+};
 
 // --- Init flow ---
 async function init() {
