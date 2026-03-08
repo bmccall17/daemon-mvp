@@ -21,9 +21,10 @@ export class MSFBridge {
 
   async connect(): Promise<boolean> {
     try {
-      // Import ManifolderClient ESM (vendor scripts already loaded via index.html)
-      const baseUrl = import.meta.url.substring(0, import.meta.url.lastIndexOf('/'));
-      const mod = await import(/* @vite-ignore */ `${baseUrl}/../vendor/ManifolderClient.js`);
+      // Import ManifolderClient ESM (vendor MVMF scripts already loaded via index.html)
+      // Use document.baseURI to resolve relative to the page, not the bundled JS
+      const base = document.baseURI.replace(/\/$/, '');
+      const mod = await import(/* @vite-ignore */ `${base}/vendor/ManifolderClient.js`);
       this.client = mod.createManifolderPromiseClient();
 
       console.log('[MSF Bridge] Connecting to', this.config.fabricUrl);
