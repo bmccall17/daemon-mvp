@@ -11,7 +11,18 @@
       "Bash(npm run:*)",
       "mcp__Snyk__snyk_code_scan",
       "Bash(curl:*)",
-      "Bash(kill %1:*)"
+      "Bash(kill %1:*)",
+      "Bash(git clone:*)",
+      "Bash(npm install:*)",
+      "Bash(claude mcp:*)",
+      "mcp__manifolder__list_profiles",
+      "mcp__manifolder__list_scopes",
+      "mcp__manifolder__create_scene",
+      "mcp__manifolder__fabric_status",
+      "mcp__manifolder__list_scenes",
+      "mcp__manifolder__open_scene",
+      "mcp__manifolder__create_object",
+      "mcp__manifolder__list_objects"
     ]
   }
 }
