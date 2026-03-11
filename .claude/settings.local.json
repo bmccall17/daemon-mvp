@@ -37,7 +37,8 @@
       "Bash(node:*)",
       "WebFetch(domain:docs.openclaw.ai)",
       "WebFetch(domain:www.npmjs.com)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(sort:*)"
     ]
   }
 }

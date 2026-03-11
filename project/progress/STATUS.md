@@ -1,8 +1,8 @@
 # Daemon MVP — Project Status
 
-**Last updated:** 2026-03-08 (end of Day 2 session 1)
+**Last updated:** 2026-03-11
 **Hackathon:** Open Metaverse Hackathon (March 7-8, 2026)
-**Current tier:** Tier 3 IN PROGRESS (RP1 service deployed, integration incomplete)
+**Current tier:** Tier 3 IN PROGRESS (RP1 service deployed, integration incomplete) | Phase 2 features DONE
 
 ---
 
@@ -25,6 +25,10 @@
 | G4 | Real MSF peers | DONE | Tested in multiplayer; ghost bug resolved |
 | G5 | Demo-ready experience | DONE | Stable, deployed, and tested |
 | G6 | RP1 daemon service | IN PROGRESS | REST API live, RP1 integration not yet verified |
+| G7 | Dynamic animation on contact | DONE | FormContext plumbing, 8 form reactions, midpoint particles |
+| G8 | Chat tone integration | DONE | Tone analyzer, reactor, thought bubbles, chat UI |
+| G9 | MSF compact encoding fix | DONE | Name column overflow fixed, publish failure handling |
+| G10 | Player/NPC distinction | DONE | Floating name labels (cyan=player, grey=NPC) |
 
 ## Phase Completion
 
@@ -36,6 +40,7 @@
 | 4 | ManifolderMCP setup | DONE | Scene created, browser wiring complete |
 | 5 | Deploy + demo prep | DONE | Deployed to GitHub Pages |
 | 6 | RP1 daemon service | IN PROGRESS | REST API deployed, LnG wired, awaiting RP1 integration test |
+| 7 | Dynamic animation + chat tone + MSF fixes | DONE | [ADR-011](../adr/011-dynamic-animation-chat-tone.md) |
 
 ## Tier 1 Test Checklist
 
@@ -135,6 +140,16 @@ All 5 phases complete. Built from zero to:
 - `~/MSF_Map_Svc/dist/web/js/rp1.js` — added LnG_Open for daemons (backup at rp1.js.bak)
 - `~/MSF_Map_Svc/dist/mapbase.js` — backup at mapbase.js.bak
 
+## Discord Bot (Daemon Assistant)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| `service/bot.js` created | DONE | discord.js v14, 5 slash commands |
+| Dependencies installed | DONE | discord.js + dotenv in service/package.json |
+| Discord App setup | PAUSED | Token set, bot not yet verified online |
+| Slash command testing | NOT STARTED | Need bot online + invite to server |
+| Pickup doc | DONE | `project/parking-lot/discord-bot-setup.md` |
+
 ## Architecture Decisions
 
 See `project/adr/` for full records:
@@ -148,3 +163,5 @@ See `project/adr/` for full records:
 - [ADR-008](../adr/008-rp1-viewer-handoff.md) — Handoff to Claude Code CLI for RP1 Viewer Blocker
 - [ADR-009](../adr/009-rp1-model-integration.md) — RP1 Model Integration & Material Conversion
 - [ADR-010](../adr/010-rp1-daemon-service.md) — RP1 Daemon Service via MSF Co-hosting
+- [ADR-011](../adr/011-dynamic-animation-chat-tone.md) — Dynamic Animation on Contact + Chat Tone Integration
+- [ADR-012](../adr/012-discord-bot-daemon-assistant.md) — Discord Bot — Daemon Assistant
