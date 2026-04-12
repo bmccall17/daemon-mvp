@@ -146,25 +146,60 @@ initFormSelector((formId: FormId) => {
 
 // --- Init flow ---
 async function init() {
-  const result = await showConfigUI();
-
   // Always spawn some simulated peers for a lively scene
   peerManager.spawnSimulatedPeers(5);
+  setConnectionStatus('disconnected');
 
-  if (result.mode === 'msf' && result.config) {
-    setConnectionStatus('connecting');
-    msfBridge = new MSFBridge(result.config);
-    const ok = await msfBridge.connect();
-    if (ok) {
-      setConnectionStatus('connected');
-      peerManager.connectToMSF(msfBridge);
+  // Admin / Connect to MSF Button
+  const adminBtn = document.createElement('button');
+  adminBtn.textContent = 'Admin Mode';
+  adminBtn.style.cssText = `
+    position: fixed;
+    bottom: 12px;
+    right: 32px;
+    background: rgba(15, 15, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ccc;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Segoe UI', monospace, system-ui, sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.2s;
+  `;
+  adminBtn.addEventListener('mouseenter', () => { adminBtn.style.background = 'rgba(30, 30, 50, 0.8)'; });
+  adminBtn.addEventListener('mouseleave', () => { adminBtn.style.background = 'rgba(15, 15, 30, 0.8)'; });
+  document.body.appendChild(adminBtn);
+
+  adminBtn.addEventListener('click', async () => {
+    const result = await showConfigUI();
+    if (result.mode === 'msf' && result.config) {
+      setConnectionStatus('connecting');
+      if (msfBridge) {
+        msfBridge.disconnect();
+        peerManager.disconnectMSF();
+      }
+      msfBridge = new MSFBridge(result.config);
+      const ok = await msfBridge.connect();
+      if (ok) {
+        setConnectionStatus('connected');
+        peerManager.connectToMSF(msfBridge);
+      } else {
+        setConnectionStatus('disconnected');
+        msfBridge = null;
+        peerManager.disconnectMSF();
+      }
     } else {
+      // Disconnect if returning to solo mode
+      if (msfBridge) {
+        msfBridge.disconnect();
+        msfBridge = null;
+      }
+      peerManager.disconnectMSF();
       setConnectionStatus('disconnected');
-      msfBridge = null;
     }
-  } else {
-    setConnectionStatus('disconnected');
-  }
+  });
 
   // Start game loop
   animate();
